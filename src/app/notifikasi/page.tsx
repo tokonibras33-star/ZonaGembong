@@ -1,5 +1,5 @@
 
-import { Bell, Info } from "lucide-react";
+import { Bell } from "lucide-react";
 
 export default function NotifikasiPage() {
   return (

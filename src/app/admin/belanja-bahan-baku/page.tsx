@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { 
   Truck, 
   ShoppingCart, 
@@ -29,7 +29,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useFirestore, useCollection, useMemoFirebase, collection, doc } from "@/firebase";
-import { addDoc, serverTimestamp, query, orderBy, limit, increment, deleteDoc, writeBatch } from "firebase/firestore";
+import { serverTimestamp, query, orderBy, limit, increment, writeBatch } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { applyPurchase } from "@/lib/hpp";

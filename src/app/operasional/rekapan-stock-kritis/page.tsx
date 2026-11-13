@@ -305,7 +305,7 @@ export default function RekapanStockKritisPage() {
       });
 
       // Table 2: Gudang Utama
-      const finalY = (docPDF as any).lastAutoTable.finalY || 100; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const finalY = (docPDF as any).lastAutoTable.finalY || 100;
       
       docPDF.setFontSize(11);
       docPDF.setTextColor(139, 26, 26);

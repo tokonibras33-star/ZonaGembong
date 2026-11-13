@@ -7,12 +7,9 @@ import {
   AlertTriangle, 
   Trash2, 
   Search, 
-  Calendar as CalendarIcon, 
   FileUp, 
   FileDown,
   PackageX,
-  User,
-  Clock,
   Layers,
   CheckCircle2
 } from "lucide-react";
@@ -20,7 +17,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFirestore, useConsolidatedCollection, useDoc, useMemoFirebase, doc } from "@/firebase";
-import { query, where, deleteDoc, updateDoc, increment, orderBy } from "firebase/firestore";
+import { query, deleteDoc, updateDoc, increment, orderBy } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";

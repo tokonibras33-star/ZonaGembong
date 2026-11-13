@@ -21,7 +21,7 @@ import {
 } from "recharts";
 import { useFirestore, useCollection, useMemoFirebase, collection } from "@/firebase";
 import { useActiveBranch, filterContainerMaterials, BRANCH_LIST, getBranchTheme } from "@/lib/branch-helper";
-import { query, orderBy, limit, where } from "firebase/firestore";
+import { query, orderBy, limit } from "firebase/firestore";
 import Link from "next/link";
 
 export default function DashboardPage() {

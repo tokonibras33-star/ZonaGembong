@@ -1506,8 +1506,8 @@ export default function LaporanStockOpnamePage() {
         (entry.items || []).map((item, idx) => [
           idx + 1,
           formatDateLabel(entry.entryDate),
-          item.code,
-          item.nama,
+          item.code || "-",
+          item.nama || "-",
           `${item.beforeBulk} ${item.unitBulk || "-"}`,
           `${item.beforeAktif} ${item.unitAktif || "-"}`,
           `${item.afterBulk} ${item.unitBulk || "-"}`,
@@ -1545,8 +1545,8 @@ export default function LaporanStockOpnamePage() {
       (entry.items || []).map((item, idx) => [
         idx + 1,
         formatDateLabel(entry.entryDate),
-        item.code,
-        item.nama,
+        item.code || "-",
+        item.nama || "-",
         `${item.beforeQtyBesar} ${item.unitBesar || ""}`,
         `${item.afterQtyBesar} ${item.unitBesar || ""}`,
         `${item.diffQtyBesar >= 0 ? `+${item.diffQtyBesar}` : item.diffQtyBesar} ${item.unitBesar || ""}`

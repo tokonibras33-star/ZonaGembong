@@ -64,6 +64,11 @@ export function applyPurchase(material, qty, price) {
   };
 }
 
+/**
+ * @param {any} material
+ * @param {number | string} price
+ * @param {number | string | null} [priceKecilInput]
+ */
 export function applyPriceUpdate(material, price, priceKecilInput = null) {
   const newPrice = Number(price || 0);
   const conversionRate = Number(material?.qtyKecil || 1);

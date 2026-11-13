@@ -202,11 +202,11 @@ export default function GembongAbsensiPage() {
       }
 
       const userData: KaryawanUser = {
+        ...res.user,
         id: res.user.id || `emp_${res.user.username}`,
         nama: res.user.nama || res.user.username,
         username: res.user.username,
         cabang: res.user.cabang || "gembong",
-        ...res.user
       };
 
       setUser(userData);

@@ -246,7 +246,7 @@ export default function EmployeeInputBahanBakuPage() {
     return [] as BranchId[];
   }, []);
 
-  const [chosenSourceBranch, setChosenSourceBranch] = useState<BranchId | null>(null);
+  const [_chosenSourceBranch, setChosenSourceBranch] = useState<BranchId | null>(null);
   const targetSourceBranch = 'gembong' as BranchId;
 
   const setTargetSourceBranch = (branch: BranchId) => {

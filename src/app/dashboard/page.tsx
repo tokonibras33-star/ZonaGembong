@@ -3,17 +3,12 @@
 import React, { useMemo, useState } from "react";
 import { 
   TrendingUp,
-  MoreHorizontal,
-  ArrowUpRight,
-  Clock,
   Package,
   ShoppingCart,
   AlertTriangle,
-  ArrowRight,
-  Calendar
+  ArrowRight
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { 
@@ -28,13 +23,12 @@ import {
   Cell,
   PieChart,
   Pie,
-  Legend,
   CartesianGrid
 } from "recharts";
 import { useFirestore, useCollection, useMemoFirebase, collection } from "@/firebase";
-import { query, orderBy, limit, where } from "firebase/firestore";
+import { query, orderBy, limit } from "firebase/firestore";
 import Link from "next/link";
-import { getTotalAvailableQty, getAverageCost, calculateRecipeIngredientCost } from "@/lib/hpp";
+import { calculateRecipeIngredientCost } from "@/lib/hpp";
 import { useActiveBranch, BRANCH_LIST, getBranchTheme } from "@/lib/branch-helper";
 
 export default function DashboardPage() {
@@ -170,10 +164,10 @@ export default function DashboardPage() {
     thisMonthSales.forEach((closing) => {
       closing.items?.forEach((item) => {
         const qty = Number(item.total || 0);
-        const productId = productCodeMap[item.code];
-        const recipe = recipeMap[productId] || [];
+        const productId = item.code ? productCodeMap[item.code] : undefined;
+        const recipe = (productId ? recipeMap[productId] : undefined) || [];
         recipe.forEach((ingredient: KomposisiItem) => {
-          const material = materialMap[ingredient?.bahanBakuId];
+          const material = ingredient?.bahanBakuId ? materialMap[ingredient.bahanBakuId] : undefined;
           totalHppMonth += calculateRecipeIngredientCost(ingredient, material, qty);
         });
       });
@@ -184,10 +178,10 @@ export default function DashboardPage() {
     yesterdaySales.forEach((closing) => {
       closing.items?.forEach((item) => {
         const qty = Number(item.total || 0);
-        const productId = productCodeMap[item.code];
-        const recipe = recipeMap[productId] || [];
+        const productId = item.code ? productCodeMap[item.code] : undefined;
+        const recipe = (productId ? recipeMap[productId] : undefined) || [];
         recipe.forEach((ingredient: KomposisiItem) => {
-          const material = materialMap[ingredient?.bahanBakuId];
+          const material = ingredient?.bahanBakuId ? materialMap[ingredient.bahanBakuId] : undefined;
           totalHppYesterday += calculateRecipeIngredientCost(ingredient, material, qty);
         });
       });

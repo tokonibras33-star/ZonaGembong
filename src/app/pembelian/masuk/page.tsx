@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ShoppingCart, Plus, Save, Loader2 } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

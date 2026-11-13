@@ -16,7 +16,6 @@ import {
   useActiveBranch, 
   branchCollection, 
   warehouseCollection, 
-  getWarehouseForBranch,
   BranchId,
   WarehouseId 
 } from '@/lib/branch-helper';

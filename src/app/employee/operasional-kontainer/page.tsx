@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import { 
-  Plus, 
   Save, 
   History, 
   Trash2, 
@@ -61,7 +60,7 @@ export default function EmployeeOperasionalKontainerPage() {
     [db, selectedDate]
   );
   
-  const { data: rawLogs, loading } = useCollection(selectedDateQuery);
+  const { data: rawLogs } = useCollection(selectedDateQuery);
 
   // Sort secara client-side untuk menghindari index error Firestore
   const dailyLogs = useMemo(() => {

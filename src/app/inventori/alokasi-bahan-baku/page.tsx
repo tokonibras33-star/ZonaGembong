@@ -25,12 +25,8 @@ import {
   GitMerge, 
   AlertCircle, 
   ClipboardCheck, 
-  X, 
   ChevronRight,
   Info,
-  Database,
-  ArrowRight,
-  HelpCircle,
   FolderOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -65,7 +61,7 @@ interface Ingredient {
   jumlah: number;
 }
 
-interface Recipe {
+interface _Recipe {
   id: string;
   produkId?: string;
   namaPelengkap?: string;

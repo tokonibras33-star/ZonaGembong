@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useActiveBranch, branchCollection, branchDoc, BRANCH_LIST, BranchId } from "@/firebase";
 import { query, where, getDocs } from "firebase/firestore";
-import { Loader2, FileSpreadsheet, FileDown, CalendarDays, Trash2, Store } from "lucide-react";
+import { Loader2, FileSpreadsheet, FileDown, CalendarDays, Trash2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";

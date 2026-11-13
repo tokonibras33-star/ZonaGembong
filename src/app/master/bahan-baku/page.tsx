@@ -11,7 +11,6 @@ import {
   FileDown, 
   FileSpreadsheet,
   Save,
-  Trash,
   Download,
   Loader2
 } from "lucide-react";
@@ -76,7 +75,7 @@ export default function MasterBahanBakuPage() {
   const [satuanKalibrasiInput, setSatuanKalibrasiInput] = useState<"Gram" | "Pcs">("Gram");
   const [totalGramasiInput, setTotalGramasiInput] = useState(0);
   const [beratBungkusInput, setBeratBungkusInput] = useState(0);
-  const [gramPerBesarInput, setGramPerBesarInput] = useState(0);
+  const [_gramPerBesarInput, setGramPerBesarInput] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredMaterials = (materials as BahanBaku[])

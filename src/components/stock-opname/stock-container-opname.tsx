@@ -346,8 +346,8 @@ export function StockContainerOpnameView({
       const realAktif = hasAktif ? Math.max(0, cleanNumber(kontainerInputs[item.id])) : 0;
 
       return [
-        item.code,
-        item.nama.toUpperCase(),
+        item.code || "-",
+        (item.nama || "-").toUpperCase(),
         `${item.qtyBesar || 0} ${item.satuanBesar}`,
         `${item.qtyKontainerBesar || 0} ${item.satuanBesar}`,
         `${Math.round(item.qtyKontainerKecil || 0)} ${item.satuanKecil}`,

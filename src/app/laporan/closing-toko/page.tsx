@@ -231,7 +231,7 @@ export default function LaporanClosingTokoPage() {
     });
 
     return list;
-  }, [rawKeuanganLogs, rawPenjualanLogs, isDateMatch, appliedShift, penjualanByDateMap]);
+  }, [rawKeuanganLogs, isDateMatch, appliedShift, penjualanByDateMap]);
 
   // Totals of all closing components
   const totals = useMemo(() => {

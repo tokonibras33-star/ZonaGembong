@@ -7,8 +7,6 @@ import {
   FileSpreadsheet, 
   CheckCircle2, 
   AlertCircle, 
-  Archive, 
-  Layers, 
   BarChart3, 
   Upload, 
   Building2, 
@@ -40,7 +38,6 @@ import { query, orderBy, writeBatch, serverTimestamp, addDoc } from "firebase/fi
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";

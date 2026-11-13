@@ -108,7 +108,7 @@ const getMetodeInfo = (log: PurchaseLog, item?: PurchaseItem) => {
 
 export default function LaporanBelanjaBahanBakuPage() {
   const db = useFirestore();
-  const activeBranch = useActiveBranch();
+  const _activeBranch = useActiveBranch();
   const { toast } = useToast();
 
   // Date Interval & Filter State

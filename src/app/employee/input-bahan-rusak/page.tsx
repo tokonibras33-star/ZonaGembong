@@ -60,7 +60,7 @@ export default function EmployeeInputBahanRusakPage() {
   // Fetch Bahan Baku
   const materialsQuery = useMemoFirebase(() => query(collection(db, "bahan-baku"), orderBy("nama", "asc")), [db]);
   const { data: rawMaterials, loading: loadingMaterials } = useCollection(materialsQuery);
-  const materials = useMemo(() => {
+  const _materials = useMemo(() => {
     return filterContainerMaterials(rawMaterials as BahanBaku[], activeBranch);
   }, [rawMaterials, activeBranch]);
 

@@ -1265,7 +1265,7 @@ export default function PengaturanPage() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          onClick={() => handleDeleteAbsensiKaryawan(karyawan.id, karyawan.nama)}
+                          onClick={() => handleDeleteAbsensiKaryawan(karyawan.id, karyawan.nama || "")}
                           className="rounded-xl text-rose-500 hover:bg-rose-50"
                         >
                           <Trash2 className="h-4 w-4" />

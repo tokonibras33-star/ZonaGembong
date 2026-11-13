@@ -4,7 +4,7 @@
  * Pemancar galat sederhana untuk menggantikan 'events' Node.js.
  * Menghindari penggunaan polyfill yang tidak stabil di lingkungan browser/Next.js.
  */
-type Listener = (...args: unknown[]) => void;
+type Listener = (...args: any[]) => void;
 
 class SimpleEmitter {
   private listeners: { [event: string]: Listener[] } = {};

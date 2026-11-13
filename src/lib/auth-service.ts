@@ -28,7 +28,7 @@ export interface UserProfile {
   role: "owner" | "admin" | "employee";
   cabang: BranchId;
   status?: "aktif" | "nonaktif";
-  karyawanId?: string;
+  karyawanId?: string | null;
   accountCategory?: "system" | "absensi" | "both" | "admin" | "owner";
   permissions?: string[];
   updatedAt?: string | number | Date | null;
@@ -707,7 +707,7 @@ export async function syncAllAccountsToFirebaseAuth(
       nama: string;
       role: "owner" | "admin" | "employee";
       cabang: BranchId;
-      karyawanId?: string;
+      karyawanId?: string | null;
       status?: "aktif" | "nonaktif";
     }>();
 

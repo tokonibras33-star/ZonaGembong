@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { 
   Plus, 
@@ -128,9 +128,9 @@ export default function ResepProdukPage() {
     return ((localRecipes.length > 0 ? localRecipes : recipes) as Recipe[]) || [];
   }, [localRecipes, recipes]);
 
-  const getProductRecipe = (productId: string) => {
+  const getProductRecipe = useCallback((productId: string) => {
     return recipeList.find(r => (r.produkId === productId && (r.type === 'produk' || !r.type))) as Recipe | undefined;
-  };
+  }, [recipeList]);
 
   // Filter resep pelengkap (Tab 2) berdasarkan tipe, search, dan filter bahan baku
   const filteredPelengkapRecipes = useMemo(() => {
@@ -211,7 +211,7 @@ export default function ResepProdukPage() {
         return true;
       })
       .sort((a, b) => (a.code || "").localeCompare(b.code || ""));
-  }, [products, searchTerm, activeTab, selectedMaterialId, recipeList]);
+  }, [products, searchTerm, activeTab, selectedMaterialId, getProductRecipe]);
 
   const selectedMaterialDetail = useMemo(() => {
     if (!selectedMaterialId || selectedMaterialId === "all") return null;

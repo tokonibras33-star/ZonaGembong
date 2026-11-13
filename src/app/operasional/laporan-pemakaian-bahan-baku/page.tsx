@@ -2,7 +2,7 @@
 
 import { getStoreConfigDocId, useActiveBranch, getBranchScopedCollectionName, BranchId, setActiveBranch, BRANCH_LIST } from "@/lib/branch-helper";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,14 +115,6 @@ export default function LaporanPemakaianBahanBakuPage() {
       return matchSelected && matchSearch;
     });
   }, [bulanRows, selectedMaterialName, searchMaterial]);
-
-  // Reset data when activeBranch changes
-  useEffect(() => {
-    setHariRows(null);
-    setBulanRows(null);
-    setSelectedMaterialName("all");
-    setSearchMaterial("");
-  }, [activeBranch]);
 
   // Settings (for PDF header)
   const settingsRef = useMemoFirebase(() => doc(db, "settings", getStoreConfigDocId()), [db]);
@@ -455,7 +447,13 @@ export default function LaporanPemakaianBahanBakuPage() {
             <button
               key={b.id}
               type="button"
-              onClick={() => setActiveBranch(b.id)}
+              onClick={() => {
+                setActiveBranch(b.id);
+                setHariRows(null);
+                setBulanRows(null);
+                setSelectedMaterialName("all");
+                setSearchMaterial("");
+              }}
               className={cn(
                 "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border shadow-2xs cursor-pointer",
                 isActive

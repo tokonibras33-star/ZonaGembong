@@ -10,14 +10,12 @@ import {
   FileUp, 
   FileDown, 
   Save,
-  Trash,
   Soup
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useFirestore, useCollection, useMemoFirebase, useDoc, collection, doc } from "@/firebase";
 import { addDoc, updateDoc, deleteDoc, getDocs, writeBatch } from "firebase/firestore";
-import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -207,7 +205,7 @@ export default function ProdukPage() {
     }
   };
 
-  const handleDeleteAll = async () => {
+  const _handleDeleteAll = async () => {
     if (confirm("PERINGATAN: Hapus SELURUH data produk? Tindakan ini tidak dapat dibatalkan.")) {
       try {
         const snapshot = await getDocs(collection(db, "produk"));
