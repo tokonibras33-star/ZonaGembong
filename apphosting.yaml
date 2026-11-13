@@ -3,10 +3,10 @@ kind: apphosting.yaml
 version: v1
 env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: "AIzaSyARQJvG1Lt8-NgrcGctWSso9kaHOxBDyNc"
+    value: "AIzaSyCpG9Jf1Nh7HB9X1QB7jc7iFKsiA7iTbOo"
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: "sistempakyani.firebaseapp.com"
+    value: "zonagombong-ef360.firebaseapp.com"
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: "sistempakyani"
+    value: "zonagombong-ef360"
   - variable: DATABASE_URL
-    value: "postgresql://user:password@localhost:5432/sistempakyani" # Placeholder
+    value: "postgresql://user:password@localhost:5432/zonagombong-ef360" # Placeholder

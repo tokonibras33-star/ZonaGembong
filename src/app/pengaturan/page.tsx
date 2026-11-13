@@ -85,7 +85,7 @@ export default function PengaturanPage() {
       // Gather any in-memory credentials loaded in state to guarantee none are missed
       const extraList: Array<{ username: string; password?: string; nama?: string; role?: "owner" | "admin" | "employee"; cabang?: BranchId }> = [];
       
-      (["gdm", "kedungreja", "tehwarga", "gembong"] as BranchId[]).forEach((b) => {
+      (["gembong"] as BranchId[]).forEach((b) => {
         (credentialsByBranch[b] || []).forEach((c) => {
           if (c.username) {
             extraList.push({
@@ -112,7 +112,7 @@ export default function PengaturanPage() {
       if (res.success) {
         toast({
           title: "Sinkronisasi Firebase Auth Sukses",
-          description: `${res.syncedCount} akun (Owner, Admin, Karyawan Gandrungmangu, Kedungreja, Teh Warga, Gembong) berhasil disinkronkan ke Firebase Authentication.`,
+          description: `${res.syncedCount} akun (Owner, Admin, Karyawan Gembong) berhasil disinkronkan ke Firebase Authentication.`,
         });
       } else {
         toast({
@@ -158,8 +158,8 @@ export default function PengaturanPage() {
   const settingsRef = useMemoFirebase(() => doc(db, "settings", configDocId), [db, configDocId]);
   const { data: storeSettings } = useDoc(settingsRef);
 
-  // Branch-isolated Employee & Admin Credentials (mengikuti toko aktif dari Top Header Switcher)
-  const credentialBranch: BranchId = selectedBranch === "all" ? "gdm" : selectedBranch;
+  // Branch-isolated Employee & Admin Credentials
+  const credentialBranch: BranchId = "gembong";
   const [credentialsByBranch, setCredentialsByBranch] = useState<Record<BranchId, EmployeeCredential[]>>({
     all: [],
     gdm: [],
@@ -168,10 +168,10 @@ export default function PengaturanPage() {
     gembong: []
   });
   const [adminByBranch, setAdminByBranch] = useState<Record<BranchId, { username: string; password: string }>>({
-    all: { username: "admin", password: "admin00" },
-    gdm: { username: "adminzona", password: "admin00" },
-    kedungreja: { username: "adminkedungreja", password: "admin00" },
-    tehwarga: { username: "admintehwarga", password: "admin00" },
+    all: { username: "admingembong", password: "admin00" },
+    gdm: { username: "admingembong", password: "admin00" },
+    kedungreja: { username: "admingembong", password: "admin00" },
+    tehwarga: { username: "admingembong", password: "admin00" },
     gembong: { username: "admingembong", password: "admin00" }
   });
   const [newCredential, setNewCredential] = useState<EmployeeCredential>({ username: "", password: "" });
@@ -179,31 +179,7 @@ export default function PengaturanPage() {
   useEffect(() => {
     const fetchCredentials = async () => {
       try {
-        // 1. Fetch GDM credentials (system_logins_gdm -> logins_gdm -> logins)
-        const gdmSysSnap = await getDoc(doc(db, "employee_credentials", "system_logins_gdm"));
-        const gdmCredSnap = await getDoc(doc(db, "employee_credentials", "logins_gdm"));
-        const gdmFallbackSnap = await getDoc(doc(db, "employee_credentials", "logins"));
-        const gdmUsers = gdmSysSnap.exists()
-          ? (gdmSysSnap.data().users || [])
-          : (gdmCredSnap.exists() 
-              ? (gdmCredSnap.data().users || []) 
-              : (gdmFallbackSnap.exists() ? (gdmFallbackSnap.data().users || []) : []));
-
-        // 2. Fetch Kedungreja credentials (system_logins_kedungreja -> logins_kedungreja)
-        const kdrjSysSnap = await getDoc(doc(db, "employee_credentials", "system_logins_kedungreja"));
-        const kdrjCredSnap = await getDoc(doc(db, "employee_credentials", "logins_kedungreja"));
-        const kdrjUsers = kdrjSysSnap.exists() 
-          ? (kdrjSysSnap.data().users || []) 
-          : (kdrjCredSnap.exists() ? (kdrjCredSnap.data().users || []) : []);
-
-        // 3. Fetch Teh Warga credentials (system_logins_tehwarga -> logins_tehwarga)
-        const tehSysSnap = await getDoc(doc(db, "employee_credentials", "system_logins_tehwarga"));
-        const tehCredSnap = await getDoc(doc(db, "employee_credentials", "logins_tehwarga"));
-        const tehUsers = tehSysSnap.exists() 
-          ? (tehSysSnap.data().users || []) 
-          : (tehCredSnap.exists() ? (tehCredSnap.data().users || []) : []);
-
-        // 4. Fetch Gembong credentials (system_logins_gembong -> logins_gembong)
+        // Fetch Gembong credentials (system_logins_gembong -> logins_gembong)
         const gmbSysSnap = await getDoc(doc(db, "employee_credentials", "system_logins_gembong"));
         const gmbCredSnap = await getDoc(doc(db, "employee_credentials", "logins_gembong"));
         const gmbUsers = gmbSysSnap.exists() 
@@ -211,43 +187,34 @@ export default function PengaturanPage() {
           : (gmbCredSnap.exists() ? (gmbCredSnap.data().users || []) : []);
 
         setCredentialsByBranch({
-          all: [...gdmUsers, ...kdrjUsers, ...tehUsers, ...gmbUsers],
-          gdm: gdmUsers,
-          kedungreja: kdrjUsers,
-          tehwarga: tehUsers,
+          all: gmbUsers,
+          gdm: gmbUsers,
+          kedungreja: gmbUsers,
+          tehwarga: gmbUsers,
           gembong: gmbUsers
         });
 
         // Fetch Admin credentials
-        const adminGdmSnap = await getDoc(doc(db, "employee_credentials", "admin_gdm"));
-        const adminGlobalSnap = await getDoc(doc(db, "employee_credentials", "admin"));
-        const adminGdm = adminGdmSnap.exists() ? adminGdmSnap.data() : (adminGlobalSnap.exists() ? adminGlobalSnap.data() : null);
-
-        const adminKdrjSnap = await getDoc(doc(db, "employee_credentials", "admin_kedungreja"));
-        const adminKdrj = adminKdrjSnap.exists() ? adminKdrjSnap.data() : null;
-
-        const adminTehSnap = await getDoc(doc(db, "employee_credentials", "admin_tehwarga"));
-        const adminTeh = adminTehSnap.exists() ? adminTehSnap.data() : null;
-
         const adminGmbSnap = await getDoc(doc(db, "employee_credentials", "admin_gembong"));
-        const adminGmb = adminGmbSnap.exists() ? adminGmbSnap.data() : null;
+        const adminGlobalSnap = await getDoc(doc(db, "employee_credentials", "admin"));
+        const adminGmb = adminGmbSnap.exists() ? adminGmbSnap.data() : (adminGlobalSnap.exists() ? adminGlobalSnap.data() : null);
 
         setAdminByBranch({
           all: {
-            username: "admin",
-            password: "admin00"
+            username: adminGmb?.username || "admingembong",
+            password: adminGmb?.password || "admin00"
           },
           gdm: {
-            username: adminGdm?.username || "adminzona",
-            password: adminGdm?.password || "admin00"
+            username: adminGmb?.username || "admingembong",
+            password: adminGmb?.password || "admin00"
           },
           kedungreja: {
-            username: adminKdrj?.username || "adminkedungreja",
-            password: adminKdrj?.password || "admin00"
+            username: adminGmb?.username || "admingembong",
+            password: adminGmb?.password || "admin00"
           },
           tehwarga: {
-            username: adminTeh?.username || "admintehwarga",
-            password: adminTeh?.password || "admin00"
+            username: adminGmb?.username || "admingembong",
+            password: adminGmb?.password || "admin00"
           },
           gembong: {
             username: adminGmb?.username || "admingembong",
@@ -460,13 +427,11 @@ export default function PengaturanPage() {
         updatedAt: serverTimestamp() 
       }, { merge: true });
 
-      if (targetBranch === "gdm") {
-        await setDoc(doc(db, "employee_credentials", "admin"), { 
-          username: branchAdmin.username.trim(), 
-          password: branchAdmin.password.trim(), 
-          updatedAt: serverTimestamp() 
-        }, { merge: true });
-      }
+      await setDoc(doc(db, "employee_credentials", "admin"), { 
+        username: branchAdmin.username.trim(), 
+        password: branchAdmin.password.trim(), 
+        updatedAt: serverTimestamp() 
+      }, { merge: true });
 
       // 3. Ambil data absensi aktif khusus targetBranch dari Firestore
       const kSnap = await getDocs(collection(db, "karyawan"));
@@ -512,13 +477,11 @@ export default function PengaturanPage() {
         updatedAt: serverTimestamp() 
       }, { merge: true });
 
-      if (targetBranch === "gdm") {
-        await setDoc(doc(db, "employee_credentials", "logins"), { 
-          users: combinedUsers, 
-          totalUsers: combinedUsers.length,
-          updatedAt: serverTimestamp() 
-        }, { merge: true });
-      }
+      await setDoc(doc(db, "employee_credentials", "logins"), { 
+        users: combinedUsers, 
+        totalUsers: combinedUsers.length,
+        updatedAt: serverTimestamp() 
+      }, { merge: true });
 
       // 6. Provision / Sync ke Firebase Authentication
       try {
@@ -903,7 +866,7 @@ export default function PengaturanPage() {
   if (activeSection === "hak-akses") {
     const currentBranchCredentials = credentialsByBranch[credentialBranch] || [];
     const currentBranchAdmin = adminByBranch[credentialBranch] || { username: "", password: "" };
-    const currentBranchInfo = BRANCH_LIST[credentialBranch] || BRANCH_LIST.gdm;
+    const currentBranchInfo = BRANCH_LIST[credentialBranch] || BRANCH_LIST.gembong;
 
     // Filter absensi karyawan untuk cabang aktif (berhubungan langsung dengan /pengaturan/absensi - karyawan)
     const branchAbsensiList = (listKaryawan as KaryawanItem[])?.filter(
@@ -923,12 +886,7 @@ export default function PengaturanPage() {
                   Hak Akses Karyawan & Admin
                 </h1>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-100 text-slate-900 border border-slate-200 text-[10px] font-black uppercase tracking-wider">
-                  <span className={cn(
-                    "h-2 w-2 rounded-full",
-                    credentialBranch === "kedungreja" ? "bg-cyan-500" :
-                    credentialBranch === "tehwarga" ? "bg-amber-500" :
-                    "bg-emerald-500"
-                  )} />
+                  <span className="h-2 w-2 rounded-full bg-indigo-500" />
                   <span>Toko: {currentBranchInfo.name} ({currentBranchInfo.code})</span>
                 </div>
               </div>
@@ -1324,7 +1282,7 @@ export default function PengaturanPage() {
     );
   }
   if (activeSection === "toko") {
-    const currentBranchInfo = BRANCH_LIST[selectedBranch] || BRANCH_LIST.gdm;
+    const currentBranchInfo = BRANCH_LIST[selectedBranch] || BRANCH_LIST.gembong;
 
     return (
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

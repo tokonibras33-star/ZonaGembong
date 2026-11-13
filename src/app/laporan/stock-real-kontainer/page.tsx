@@ -304,32 +304,18 @@ export default function LaporanStockRealKontainerPage() {
     };
 
     (rawMaterials as BahanBaku[])?.forEach((mat) => {
-      const bId = normalizeBranchId(mat._branchId || 'gdm') as 'gdm' | 'kedungreja' | 'tehwarga' | 'gembong';
-      if ((bId === 'gdm' || bId === 'gembong') && (mat.isFromTehWarga || mat.originalTwCode || /^BB-0(0[1-9]|[1-4][0-9])$/i.test(mat.code || ''))) {
-        return;
-      }
+      const bId = normalizeBranchId(mat._branchId || 'gembong') as 'gdm' | 'kedungreja' | 'tehwarga' | 'gembong';
       if (mat.nama) addUsage(mat.nama, bId);
       if (mat.code) addUsage(mat.code, bId);
     });
 
     SHARED_MATERIAL_ALIASES.forEach((alias) => {
-      addUsage(alias.canonicalName, 'gdm');
-      addUsage(alias.canonicalName, 'kedungreja');
-      addUsage(alias.canonicalName, 'tehwarga');
       addUsage(alias.canonicalName, 'gembong');
       alias.aliases.forEach((a) => {
-        addUsage(a, 'gdm');
-        addUsage(a, 'kedungreja');
-        addUsage(a, 'tehwarga');
         addUsage(a, 'gembong');
       });
       if (alias.gdmCode) {
-        addUsage(alias.gdmCode, 'gdm');
-        addUsage(alias.gdmCode, 'kedungreja');
         addUsage(alias.gdmCode, 'gembong');
-      }
-      if (alias.twCode) {
-        addUsage(alias.twCode, 'tehwarga');
       }
     });
 
@@ -371,7 +357,7 @@ export default function LaporanStockRealKontainerPage() {
     (rawOpnames as RawOpnameDoc[]).forEach((opDoc) => {
       const opDate = parseDateString(opDoc.date);
       if (!opDate || opDate >= selectedDate) return;
-      const bId = normalizeBranchId(opDoc._branchId || opDoc.branch || opDoc.branchId || opDoc.cabang || 'gdm');
+      const bId = normalizeBranchId(opDoc._branchId || opDoc.branch || opDoc.branchId || opDoc.cabang || 'gembong');
 
       if (activeBranch !== 'all' && bId !== activeBranch) return;
 
@@ -388,12 +374,12 @@ export default function LaporanStockRealKontainerPage() {
     // If no opname strictly before selectedDate was found, fall back to the latest opname document in history for that branch
     const targetBranchesToInspect: BranchId[] = 
       activeBranch === 'all' 
-        ? ['gdm', 'kedungreja', 'tehwarga', 'gembong'] 
+        ? ['gembong'] 
         : [activeBranch];
 
     targetBranchesToInspect.forEach((bId) => {
       if (!latestPriorOpnamePerBranch[bId]) {
-        const fallback = (rawOpnames as RawOpnameDoc[]).find((opDoc) => normalizeBranchId(opDoc._branchId || opDoc.branch || opDoc.branchId || opDoc.cabang || 'gdm') === bId);
+        const fallback = (rawOpnames as RawOpnameDoc[]).find((opDoc) => normalizeBranchId(opDoc._branchId || opDoc.branch || opDoc.branchId || opDoc.cabang || 'gembong') === bId);
         if (fallback) {
           latestPriorOpnamePerBranch[bId] = fallback;
         }
@@ -455,7 +441,7 @@ export default function LaporanStockRealKontainerPage() {
         const logDate = parseDateString(log.tanggal || log.createdAt);
         if (logDate !== selectedDate) return;
 
-        const logBranch = normalizeBranchId(log._branchId || log.branchId || 'gdm');
+        const logBranch = normalizeBranchId(log._branchId || log.branchId || 'gembong');
         if (activeBranch !== 'all' && logBranch !== activeBranch) return;
 
         const isAmbilGudang = 
@@ -676,21 +662,15 @@ export default function LaporanStockRealKontainerPage() {
       if (byCode) byCode.forEach((b) => storeSet.add(b));
 
       if (storeSet.size === 0) {
-        if (/^BB-0(0[1-9]|[1-4][0-9])$/i.test(r.code)) {
-          storeSet.add('tehwarga');
-        } else {
-          storeSet.add('gdm');
-          storeSet.add('kedungreja');
-          storeSet.add('gembong');
-        }
+        storeSet.add('gembong');
       }
 
-      const branchOrder: Array<'gdm' | 'kedungreja' | 'tehwarga' | 'gembong'> = ['gdm', 'kedungreja', 'tehwarga', 'gembong'];
+      const branchOrder: Array<'gdm' | 'kedungreja' | 'tehwarga' | 'gembong'> = ['gembong'];
       r.targetBranches = branchOrder
         .filter((b) => storeSet.has(b))
         .map((b) => ({
           id: b,
-          shortName: b === 'gdm' ? 'Zona GDM' : b === 'kedungreja' ? 'Kedungreja' : b === 'gembong' ? 'Zona Gembong' : 'Teh Warga',
+          shortName: 'Zona Gembong',
           badgeColor: BRANCH_LIST[b]?.badgeColor || ''
         }));
     });

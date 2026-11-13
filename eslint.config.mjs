@@ -9,7 +9,14 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "warn",
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/purity": "warn",
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_"
+        }
+      ],
       "react-hooks/exhaustive-deps": "warn",
       "@next/next/no-img-element": "warn",
     },

@@ -2,12 +2,25 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Coffee, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Users, Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { loginWithFirebaseAuth } from "@/lib/auth-service";
+import { cn } from "@/lib/utils";
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  style: ["normal", "italic"],
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
 
 export default function EmployeeLoginPage() {
   const [username, setUsername] = useState("");
@@ -19,8 +32,8 @@ export default function EmployeeLoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    localStorage.setItem("current_branch", "gdm");
-    document.documentElement.setAttribute("data-branch", "gdm");
+    localStorage.setItem("current_branch", "gembong");
+    document.documentElement.setAttribute("data-branch", "gembong");
   }, []);
 
   const handleLogin = async () => {
@@ -40,13 +53,13 @@ export default function EmployeeLoginPage() {
         username: inputUsername,
         password: inputPassword,
         expectedRole: "employee",
-        expectedBranch: "gdm",
+        expectedBranch: "gembong",
         loginType: "system"
       });
 
       if (result.success && result.profile) {
         try {
-          localStorage.setItem("current_branch", "gdm");
+          localStorage.setItem("current_branch", "gembong");
         } catch (storageErr) {
           console.warn("Storage error on mobile webview:", storageErr);
         }
@@ -66,33 +79,93 @@ export default function EmployeeLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#8b1a1a] text-white overflow-hidden relative font-sans flex flex-col justify-center items-center">
-      <div className="absolute top-6 left-6 z-20">
-        <Button onClick={() => router.push('/zona_gdm')} variant="ghost" size="icon" className="bg-white/10 text-white hover:bg-white/20">
+    <div
+      className={cn(
+        jakarta.className,
+        "min-h-[100dvh] bg-[#f2e9dc] text-[#1e120a] overflow-hidden relative flex flex-col justify-center items-center px-4 py-10"
+      )}
+    >
+      {/* Top Dark Espresso Hero Accent Band */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[44%] rounded-b-[3rem] sm:rounded-b-[4.5rem] shadow-2xl"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 70% at 50% 0%, #3d2414 0%, #1c1008 65%, #120a05 100%)",
+        }}
+      />
+      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[420px] h-[240px] rounded-full bg-[#e6b88a]/15 blur-[90px]" />
+
+      {/* Back Button */}
+      <div className="absolute top-5 left-5 sm:top-7 sm:left-7 z-20">
+        <Button
+          onClick={() => router.push("/")}
+          variant="ghost"
+          size="icon"
+          className="h-10 w-10 rounded-full bg-[#fdfaf5]/15 border border-[#e6b88a]/30 text-[#f8f2e8] hover:bg-[#e6b88a] hover:text-[#160c06] backdrop-blur-md transition-all"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Button>
       </div>
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none" 
-           style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "40px 40px" }}>
-      </div>
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center border border-white/20 backdrop-blur-md">
-            <Coffee className="h-5 w-5 text-white" />
+
+      <div className="relative z-10 w-full max-w-[400px] flex flex-col items-center">
+        {/* Brand Header on Dark Espresso Backdrop */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="h-14 w-14 rounded-full bg-[#fdfaf5] p-1.5 flex items-center justify-center border-2 border-[#e6b88a] shadow-[0_12px_30px_rgba(0,0,0,0.4)] mb-3">
+            <img
+              src="/images/hero/logo-zonawaktu.png"
+              alt="Logo Zona Waktu"
+              className="h-full w-full object-contain"
+            />
           </div>
-          <span className="text-sm font-black tracking-[0.3em] uppercase">ZONA WAKTU</span>
+          <span className="text-[11px] font-extrabold tracking-[0.28em] uppercase text-[#f8f2e8]">
+            ZONA.WAKTU
+          </span>
+          <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-[#e6b88a] mt-0.5">
+            Outlet &amp; Gudang Utama Gembong
+          </span>
         </div>
-        <div className="w-full max-w-sm p-8 bg-white/10 border border-white/20 backdrop-blur-md rounded-lg">
-          <h2 className="text-2xl font-black text-center mb-6 uppercase tracking-widest">Sistem Karyawan</h2>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username" className="text-white/80">Username</Label>
+
+        {/* Warm Ivory Cream Login Card with Dark Chocolate Accents */}
+        <div className="w-full p-6 sm:p-8 bg-[#fdfaf5] border border-[#e2d2bc] rounded-[2rem] shadow-[0_24px_60px_-15px_rgba(24,14,7,0.18)]">
+          <div className="flex flex-col items-center text-center mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f4ecdf] border border-[#e2d2bc] text-[#6b3c16] text-[9px] font-extrabold uppercase tracking-[0.2em] mb-2.5">
+              <Users className="h-3.5 w-3.5 text-[#8b4d20]" />
+              Kru &amp; Barista
+            </div>
+            <h1
+              className={cn(
+                playfair.className,
+                "text-2xl sm:text-3xl font-bold text-[#1e120a] tracking-tight"
+              )}
+            >
+              Sistem <span className="italic font-semibold text-[#8b4d20]">Karyawan</span>
+            </h1>
+            <p className="text-[11px] font-medium text-[#785c42] mt-1">
+              Masuk untuk input stok kontainer, pemakaian, dan kas shift.
+            </p>
+          </div>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="username"
+                className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#57402c]"
+              >
+                Username Karyawan
+              </Label>
               <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="bg-black/20 border-white/30 text-white"
+                className="h-12 rounded-xl bg-[#f8f2e8] border-[#dccab0] text-[#1e120a] placeholder:text-[#a88e72] font-semibold focus-visible:ring-[#6b3c16]"
+                placeholder="Masukkan username"
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
@@ -100,27 +173,34 @@ export default function EmployeeLoginPage() {
                 disabled={loading}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="password"
+                className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#57402c]"
+              >
+                Password
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-black/20 border-white/30 text-white pr-10"
+                  className="h-12 rounded-xl bg-[#f8f2e8] border-[#dccab0] text-[#1e120a] placeholder:text-[#a88e72] font-semibold pr-11 focus-visible:ring-[#6b3c16]"
+                  placeholder="••••••••"
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
                   autoComplete="current-password"
                   disabled={loading}
                 />
-                <div className="absolute inset-y-0 right-2 flex items-center">
+                <div className="absolute inset-y-0 right-1.5 flex items-center">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setShowPassword((s) => !s)}
-                    className="text-white/80 bg-transparent hover:bg-white/10"
+                    className="h-9 w-9 rounded-lg text-[#785c42] hover:text-[#1e120a] hover:bg-[#eadcc9]/60"
                     type="button"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -128,12 +208,22 @@ export default function EmployeeLoginPage() {
                 </div>
               </div>
             </div>
-            {error && <p className="text-red-400 text-sm font-bold text-center py-2">{error}</p>}
-            <Button onClick={handleLogin} disabled={loading} className="w-full bg-white text-[#8b1a1a] hover:bg-slate-100 font-bold uppercase tracking-widest">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Login
+
+            {error && (
+              <div className="rounded-xl bg-rose-50 border border-rose-200 px-3.5 py-2.5 text-rose-700 text-xs font-bold text-center">
+                {error}
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-[#1e120a] via-[#2b180c] to-[#3b2212] hover:from-[#2b180c] hover:to-[#4c2b15] text-[#f8f2e8] border border-[#e6b88a]/30 font-extrabold text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-[#1e120a]/20 transition-all"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#e6b88a]" />}
+              {loading ? "Memproses..." : "Login Karyawan"}
             </Button>
-          </div>
+          </form>
         </div>
       </div>
     </div>

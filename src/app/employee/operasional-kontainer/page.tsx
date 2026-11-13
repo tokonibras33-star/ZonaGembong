@@ -39,7 +39,7 @@ export default function EmployeeOperasionalKontainerPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const activeBranch = useActiveBranch();
-  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gdm;
+  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gembong;
   const theme = getBranchTheme(activeBranch);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [expenseName, setExpenseName] = useState("");

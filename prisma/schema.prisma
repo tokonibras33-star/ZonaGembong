@@ -1,4 +1,4 @@
-// Prisma schema for Sistempakyani ERP
+// Prisma schema for zonagombong-ef360 ERP
 
 generator client {
   provider = "prisma-client-js"

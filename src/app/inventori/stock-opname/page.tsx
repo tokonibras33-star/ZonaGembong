@@ -520,74 +520,18 @@ export default function StockOpnamePage() {
             <div className="flex items-center gap-1 bg-white p-1 rounded-xl shadow-xs border border-slate-200/60">
               <button
                 type="button"
-                onClick={() => setSelectedWarehouse("gdm")}
-                className={cn(
-                  "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedWarehouse === "gdm" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                Gudang GDM (Terpadu)
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedWarehouse("kedungreja")}
-                className={cn(
-                  "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedWarehouse === "kedungreja" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                Gudang Kedungreja
-              </button>
-              <button
-                type="button"
                 onClick={() => setSelectedWarehouse("gembong")}
-                className={cn(
-                  "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedWarehouse === "gembong" ? "bg-violet-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
+                className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all bg-indigo-900 text-white shadow-xs"
               >
-                Gudang Gembong (Mandiri)
+                Gudang Gembong
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-1 bg-white p-1 rounded-xl shadow-xs border border-slate-200/60">
               <button
                 type="button"
-                onClick={() => setSelectedBranch("gdm")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedBranch === "gdm" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                ZW GDM
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedBranch("tehwarga")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedBranch === "tehwarga" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                Teh Warga GDM
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedBranch("kedungreja")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedBranch === "kedungreja" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                ZW Kedungreja
-              </button>
-              <button
-                type="button"
                 onClick={() => setSelectedBranch("gembong")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedBranch === "gembong" ? "bg-violet-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
+                className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all bg-indigo-900 text-white shadow-xs"
               >
                 ZW Gembong
               </button>

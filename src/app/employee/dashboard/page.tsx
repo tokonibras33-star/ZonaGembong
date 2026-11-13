@@ -28,7 +28,7 @@ export default function DashboardPage() {
   const mounted = true; // client component — always mounted
   const db = useFirestore();
   const activeBranch = useActiveBranch();
-  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gdm;
+  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gembong;
   const theme = getBranchTheme(activeBranch);
   const isGembong = activeBranch === 'gembong';
 
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                     {chartData.map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`} 
-                        fill={index === chartData.length - 1 ? 'url(#barGradient)' : isGembong ? '#e0e7ff' : '#f8fafc'} 
+                        fill={index === chartData.length - 1 ? 'url(#barGradient)' : isGembong ? '#efe5d5' : '#f8f2e8'} 
                         className="hover:opacity-80 transition-opacity cursor-pointer"
                       />
                     ))}
@@ -246,12 +246,12 @@ export default function DashboardPage() {
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#475569', fontSize: 10, fontWeight: 800 }} 
+                    tick={{ fill: '#785c42', fontSize: 10, fontWeight: 800 }} 
                     dy={10}
                   />
                   <Tooltip 
                     cursor={{ fill: 'transparent' }}
-                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ borderRadius: '1rem', border: '1px solid #e2d2bc', backgroundColor: '#fdfaf5', boxShadow: '0 25px 50px -12px rgba(24,14,7,0.12)' }}
                     formatter={(value) => [`Rp ${Number(value).toLocaleString('id-ID')}k`, 'Penjualan']}
                   />
                 </BarChart>

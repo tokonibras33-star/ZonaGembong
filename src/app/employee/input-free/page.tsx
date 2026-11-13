@@ -49,7 +49,7 @@ export default function EmployeeInputFreePage() {
   const db = useFirestore();
   const { toast } = useToast();
   const activeBranch = useActiveBranch();
-  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gdm;
+  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gembong;
   const theme = getBranchTheme(activeBranch);
 
   // Active Tab: "input" | "riwayat"

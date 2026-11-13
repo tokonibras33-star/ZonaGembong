@@ -107,7 +107,7 @@ interface RawSaleDoc {
 export default function EmployeeTitipJualPage() {
   const db = useFirestore();
   const activeBranch = useActiveBranch();
-  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gdm;
+  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gembong;
   const theme = getBranchTheme(activeBranch);
   const { toast } = useToast();
 

@@ -1,479 +1,697 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { 
-  Coffee, 
-  Store, 
-  MapPin, 
-  Clock, 
-  ArrowRight, 
-  Sparkles, 
-  Search, 
-  Flame,
+import Image from "next/image";
+import { Playfair_Display } from "next/font/google";
+import {
   ShieldCheck,
-  UserCheck
+  UserCheck,
+  Users,
+  CalendarCheck,
+  ArrowUpRight,
+  Sparkles,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { useFirestore, useDoc, useMemoFirebase, doc } from "@/firebase";
+import { setActiveBranch } from "@/lib/branch-helper";
+import { HeroCupVisual, DrinkVariantId } from "@/components/hero/hero-cup-visual";
 
-interface StoreBranch {
-  id: string;
-  code: string;
-  region: string;
-  name: string;
-  tagline: string;
-  address: string;
-  hours: string;
-  status: "active" | "coming_soon";
-  isPrimary?: boolean;
-  branchNumber: string;
-  route: string;
-  ownerLoginRoute: string;
-  adminLoginRoute: string;
-  employeeLoginRoute: string;
-  absensiRoute: string;
-  features: string[];
-  theme: {
-    cardBg: string;
-    cardBorder: string;
-    glowColor: string;
-    regionTextColor: string;
-    textColor: string;
-    subtextColor: string;
-    infoBorderColor: string;
-    featureBg: string;
-    badgeBg: string;
-    badgeText: string;
-    badgeBorder: string;
-    tagBg: string;
-    tagText: string;
-    btnBg: string;
-    btnText: string;
-    btnHover: string;
-    accentLine: string;
-  };
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+
+interface DrinkShowcase {
+  id: DrinkVariantId;
+  watermark: string;
+  titleLine1: string;
+  titleLine2: string;
+  badge: string;
+  craftHeading: string;
+  craftDescription: string;
+  description: string;
+  bgBase: string;
+  bgGradient: string;
+  glowColor: string;
+  accentHex: string;
+  pillBorder: string;
+  beansConfig: Array<{
+    top: string;
+    left: string;
+    size: number;
+    rotate: number;
+    blur?: string;
+    type: "bean" | "leaf";
+  }>;
 }
 
-const DEFAULT_BRANCHES: StoreBranch[] = [
+const SIGNATURE_DRINKS: DrinkShowcase[] = [
   {
-    id: "gdm",
-    code: "ZW-01",
-    region: "GANDRUNGMANGU",
-    name: "Zona Waktu - Gandrungmangu",
-    tagline: "Cabang Pusat & Flagship Coffee & Teh Bakar",
-    address: "Area Gandrungmangu - Pusat Operasional Utama",
-    hours: "08.00 - 22.00 WIB",
-    status: "active",
-    isPrimary: true,
-    branchNumber: "CABANG 01 • PUSAT",
-    route: "/zona_gdm",
-    ownerLoginRoute: "/owner-login",
-    adminLoginRoute: "/admin-login",
-    employeeLoginRoute: "/employee-login",
-    absensiRoute: "/absensi",
-    features: ["Coffee & Teh Bakar", "Kasir POS", "Sistem Karyawan", "Absensi GPS"],
-    theme: {
-      cardBg: "bg-gradient-to-b from-[#8b1414] via-[#630d0d] to-[#3b0808]",
-      cardBorder: "border-amber-400/60 hover:border-amber-300 shadow-2xl shadow-red-950/80",
-      glowColor: "bg-amber-400/25",
-      regionTextColor: "text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-300 to-yellow-100",
-      textColor: "text-white",
-      subtextColor: "text-white/80",
-      infoBorderColor: "border-white/10",
-      featureBg: "bg-white/10 text-white/90 border-white/10",
-      badgeBg: "bg-amber-400/20",
-      badgeText: "text-amber-200",
-      badgeBorder: "border-amber-400/50",
-      tagBg: "bg-black/40 border-amber-400/30 text-amber-100",
-      tagText: "text-amber-200",
-      btnBg: "bg-white",
-      btnText: "text-[#8b1414]",
-      btnHover: "hover:bg-amber-50 hover:shadow-xl hover:shadow-amber-500/20",
-      accentLine: "bg-gradient-to-r from-amber-400 via-amber-300 to-transparent",
-    }
+    id: "gula-aren",
+    watermark: "Gula Aren",
+    titleLine1: "Kopi Susu",
+    titleLine2: "& Gula Aren",
+    badge: "Signature Coffee #01",
+    craftHeading: "Slow Brewed, Served Cold",
+    craftDescription:
+      "Racikan espresso pilihan di atas susu segar dan es kristal, berpadu manis alami gula aren murni.",
+    description:
+      "Perpaduan house blend espresso dengan susu creamy dan legitnya gula aren asli khas Zona Waktu Gembong.",
+    bgBase: "#120a06",
+    bgGradient:
+      "radial-gradient(ellipse 65% 55% at 50% 52%, #3b2313 0%, #1c1008 52%, #0b0603 100%)",
+    glowColor: "rgba(212, 163, 115, 0.28)",
+    accentHex: "#e6b88a",
+    pillBorder: "rgba(230, 184, 138, 0.35)",
+    beansConfig: [
+      { top: "14%", left: "12%", size: 44, rotate: -25, blur: "1px", type: "bean" },
+      { top: "28%", left: "38%", size: 28, rotate: 35, type: "bean" },
+      { top: "18%", left: "63%", size: 34, rotate: -15, type: "bean" },
+      { top: "36%", left: "86%", size: 48, rotate: 42, blur: "1.5px", type: "bean" },
+      { top: "68%", left: "26%", size: 24, rotate: -48, type: "bean" },
+    ],
   },
   {
-    id: "cabang-kedungreja",
-    code: "ZW-02",
-    region: "KEDUNGREJA",
-    name: "Zona Waktu - Kedungreja",
-    tagline: "Coffee & Teh Bakar Cabang Kedungreja",
-    address: "Area Kedungreja - Outlet Operasional",
-    hours: "08.00 - 22.00 WIB",
-    status: "active",
-    branchNumber: "CABANG 02 • OUTLET",
-    route: "/zona_kedungreja",
-    ownerLoginRoute: "/zona_kedungreja/owner-login",
-    adminLoginRoute: "/zona_kedungreja/admin-login",
-    employeeLoginRoute: "/zona_kedungreja/employee-login",
-    absensiRoute: "/zona_kedungreja/absensi",
-    features: ["Coffee & Teh Bakar", "Kasir POS", "Sistem Karyawan", "Absensi GPS"],
-    theme: {
-      cardBg: "bg-gradient-to-b from-[#ffffff] via-[#f0fdfa] to-[#dcfce7]",
-      cardBorder: "border-teal-400/90 hover:border-teal-500 shadow-2xl shadow-cyan-900/30",
-      glowColor: "bg-teal-300/40",
-      regionTextColor: "text-transparent bg-clip-text bg-gradient-to-r from-teal-900 via-cyan-900 to-emerald-900",
-      textColor: "text-slate-900",
-      subtextColor: "text-slate-700",
-      infoBorderColor: "border-teal-200/90",
-      featureBg: "bg-teal-100/90 text-teal-950 border-teal-300 font-bold",
-      badgeBg: "bg-teal-700",
-      badgeText: "text-white",
-      badgeBorder: "border-teal-600",
-      tagBg: "bg-teal-100 border-teal-300 text-teal-900",
-      tagText: "text-teal-900",
-      btnBg: "bg-gradient-to-r from-teal-700 to-cyan-800",
-      btnText: "text-white",
-      btnHover: "hover:from-teal-800 hover:to-cyan-900 hover:shadow-xl hover:shadow-teal-700/30",
-      accentLine: "bg-gradient-to-r from-teal-600 via-cyan-600 to-transparent",
-    }
+    id: "teh-bakar",
+    watermark: "Teh Bakar",
+    titleLine1: "Signature",
+    titleLine2: "& Teh Bakar",
+    badge: "Authentic Roasted Tea #02",
+    craftHeading: "Smoky Roasted, Silky Foam",
+    craftDescription:
+      "Daun teh pilihan yang dipanggang perlahan menghasilkan aroma karamel smoky yang autentik dan menyegarkan.",
+    description:
+      "Identitas khas Zona Waktu: teh bakar dengan karakter rasa hangat, segar, dan lapisan buih lembut di atasnya.",
+    bgBase: "#160807",
+    bgGradient:
+      "radial-gradient(ellipse 65% 55% at 50% 52%, #421712 0%, #210b09 52%, #0c0403 100%)",
+    glowColor: "rgba(224, 122, 95, 0.30)",
+    accentHex: "#f2a68d",
+    pillBorder: "rgba(242, 166, 141, 0.35)",
+    beansConfig: [
+      { top: "16%", left: "15%", size: 42, rotate: 18, blur: "1px", type: "leaf" },
+      { top: "24%", left: "36%", size: 28, rotate: -32, type: "leaf" },
+      { top: "21%", left: "65%", size: 32, rotate: 28, type: "bean" },
+      { top: "32%", left: "84%", size: 46, rotate: -22, blur: "1px", type: "leaf" },
+      { top: "64%", left: "29%", size: 26, rotate: 55, type: "leaf" },
+    ],
   },
   {
-    id: "tehwarga",
-    code: "TW-01",
-    region: "TEH WARGA GDM",
-    name: "Teh Warga - Gandrungmangu",
-    tagline: "Spesialis Racikan Varian Teh Segar & Teh Warga Autentik",
-    address: "Area Gandrungmangu - Outlet Spesialis Varian Teh",
-    hours: "08.00 - 22.00 WIB",
-    status: "active",
-    branchNumber: "CABANG 03 • SPESIALIS TEH",
-    route: "/teh_warga_gdm",
-    ownerLoginRoute: "/teh_warga_gdm/owner-login",
-    adminLoginRoute: "/teh_warga_gdm/admin-login",
-    employeeLoginRoute: "/teh_warga_gdm/employee-login",
-    absensiRoute: "/teh_warga_gdm/absensi",
-    features: ["Varian Teh Spesialis", "Kasir POS", "Sistem Karyawan", "Absensi GPS"],
-    theme: {
-      cardBg: "bg-gradient-to-b from-[#064e3b] via-[#043e30] to-[#022c22]",
-      cardBorder: "border-emerald-400/60 hover:border-emerald-300 shadow-2xl shadow-emerald-950/80",
-      glowColor: "bg-emerald-400/25",
-      regionTextColor: "text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-green-300 to-lime-200",
-      textColor: "text-white",
-      subtextColor: "text-emerald-100/80",
-      infoBorderColor: "border-emerald-500/20",
-      featureBg: "bg-emerald-800/50 text-emerald-200 border-emerald-600/50 font-bold",
-      badgeBg: "bg-emerald-500/20",
-      badgeText: "text-emerald-300",
-      badgeBorder: "border-emerald-400/40",
-      tagBg: "bg-black/30 border-emerald-500/30 text-emerald-200",
-      tagText: "text-emerald-300",
-      btnBg: "bg-gradient-to-r from-emerald-400 to-lime-300",
-      btnText: "text-[#022c22]",
-      btnHover: "hover:from-emerald-300 hover:to-lime-200 hover:shadow-xl hover:shadow-emerald-500/20",
-      accentLine: "bg-gradient-to-r from-emerald-400 via-lime-400 to-transparent",
-    }
+    id: "choco-bengbeng",
+    watermark: "Dark Cocoa",
+    titleLine1: "Iced Choco",
+    titleLine2: "& Beng Beng",
+    badge: "Velvet Chocolate #03",
+    craftHeading: "Rich Cocoa, Creamy Malt",
+    craftDescription:
+      "Lelehan cokelat pekat premium yang dipadukan dengan gurihnya malt karamel dalam sajian dingin yang lembut.",
+    description:
+      "Sensasi cokelat pekat berpadu tekstur creamy malt favorit yang memanjakan di setiap tegukan.",
+    bgBase: "#110908",
+    bgGradient:
+      "radial-gradient(ellipse 65% 55% at 50% 52%, #331c18 0%, #190d0b 52%, #090504 100%)",
+    glowColor: "rgba(200, 159, 129, 0.26)",
+    accentHex: "#d8b49c",
+    pillBorder: "rgba(216, 180, 156, 0.35)",
+    beansConfig: [
+      { top: "12%", left: "18%", size: 46, rotate: 40, blur: "1px", type: "bean" },
+      { top: "31%", left: "35%", size: 26, rotate: -18, type: "bean" },
+      { top: "16%", left: "61%", size: 36, rotate: 22, type: "bean" },
+      { top: "38%", left: "82%", size: 42, rotate: -35, blur: "1.5px", type: "bean" },
+      { top: "70%", left: "31%", size: 28, rotate: 15, type: "bean" },
+    ],
   },
   {
-    id: "cabang-gembong",
-    code: "ZW-03",
-    region: "GEMBONG",
-    name: "Zona Waktu - Gembong",
-    tagline: "Coffee & Teh Bakar Cabang Gembong",
-    address: "Area Gembong - Outlet Operasional & Gudang Mandiri",
-    hours: "08.00 - 22.00 WIB",
-    status: "active",
-    branchNumber: "CABANG 04 • OUTLET",
-    route: "/zona_gembong",
-    ownerLoginRoute: "/zona_gembong/owner-login",
-    adminLoginRoute: "/zona_gembong/admin-login",
-    employeeLoginRoute: "/zona_gembong/employee-login",
-    absensiRoute: "/zona_gembong/absensi",
-    features: ["Coffee & Teh Bakar", "Kasir POS", "Sistem Karyawan", "Absensi GPS", "Gudang Utama Mandiri"],
-    theme: {
-      cardBg: "bg-gradient-to-b from-[#1e1b4b] via-[#0f172a] to-[#020617]",
-      cardBorder: "border-indigo-400/70 hover:border-indigo-300 shadow-2xl shadow-indigo-950/80",
-      glowColor: "bg-indigo-500/25",
-      regionTextColor: "text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-blue-200 to-sky-100",
-      textColor: "text-white",
-      subtextColor: "text-indigo-100/80",
-      infoBorderColor: "border-indigo-500/20",
-      featureBg: "bg-indigo-900/50 text-indigo-200 border-indigo-500/40 font-bold",
-      badgeBg: "bg-indigo-500/20",
-      badgeText: "text-indigo-300",
-      badgeBorder: "border-indigo-400/40",
-      tagBg: "bg-black/40 border-indigo-500/30 text-indigo-200",
-      tagText: "text-indigo-300",
-      btnBg: "bg-gradient-to-r from-indigo-500 to-blue-500",
-      btnText: "text-white",
-      btnHover: "hover:from-indigo-400 hover:to-blue-400 hover:shadow-xl hover:shadow-indigo-500/25",
-      accentLine: "bg-gradient-to-r from-indigo-400 via-blue-400 to-transparent",
-    }
-  }
+    id: "teh-tarik",
+    watermark: "Machiato",
+    titleLine1: "Teh Tarik",
+    titleLine2: "& Machiato",
+    badge: "Torched Macchiato #04",
+    craftHeading: "Pulled Tea, Torched Cream",
+    craftDescription:
+      "Kelembutan teh tarik berempah yang ditarik berbusa, ditutup lapisan macchiato gurih yang dibakar tipis.",
+    description:
+      "Harmoni teh tarik klasik dengan sentuhan modern cream macchiato bakar yang kaya rasa dan beraroma.",
+    bgBase: "#140e07",
+    bgGradient:
+      "radial-gradient(ellipse 65% 55% at 50% 52%, #3d2912 0%, #1f1408 52%, #0a0703 100%)",
+    glowColor: "rgba(233, 196, 106, 0.28)",
+    accentHex: "#f3cb78",
+    pillBorder: "rgba(243, 203, 120, 0.35)",
+    beansConfig: [
+      { top: "15%", left: "11%", size: 40, rotate: -15, blur: "1px", type: "leaf" },
+      { top: "26%", left: "39%", size: 30, rotate: 45, type: "bean" },
+      { top: "19%", left: "64%", size: 32, rotate: -28, type: "leaf" },
+      { top: "34%", left: "85%", size: 44, rotate: 18, blur: "1px", type: "leaf" },
+      { top: "66%", left: "27%", size: 25, rotate: -36, type: "bean" },
+    ],
+  },
 ];
 
-export default function MultiStoreLandingPage() {
+function FloatingElementSVG({
+  type,
+  accent,
+}: {
+  type: "bean" | "leaf";
+  accent: string;
+}) {
+  if (type === "leaf") {
+    return (
+      <svg viewBox="0 0 64 64" fill="none" className="w-full h-full drop-shadow-xl">
+        <path
+          d="M52 12C34 12 16 24 12 48C28 46 48 34 52 12Z"
+          fill="url(#leafGrad)"
+          stroke={accent}
+          strokeWidth="1.5"
+          strokeOpacity="0.45"
+        />
+        <path
+          d="M12 48C24 36 36 24 50 14"
+          stroke={accent}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeOpacity="0.55"
+        />
+        <defs>
+          <linearGradient id="leafGrad" x1="12" y1="12" x2="52" y2="48" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#4a3219" />
+            <stop offset="1" stopColor="#1e1208" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className="w-full h-full drop-shadow-2xl">
+      <ellipse
+        cx="32"
+        cy="32"
+        rx="22"
+        ry="15"
+        transform="rotate(-28 32 32)"
+        fill="url(#beanGrad)"
+        stroke={accent}
+        strokeWidth="1"
+        strokeOpacity="0.3"
+      />
+      <path
+        d="M16 41C24 31 38 33 48 23"
+        stroke="#120904"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M16 41C24 31 38 33 48 23"
+        stroke={accent}
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        strokeOpacity="0.35"
+      />
+      <defs>
+        <radialGradient
+          id="beanGrad"
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(26 26) rotate(35) scale(26 18)"
+        >
+          <stop stopColor="#6f4526" />
+          <stop offset="0.65" stopColor="#3b2110" />
+          <stop offset="1" stopColor="#1c0e06" />
+        </radialGradient>
+      </defs>
+    </svg>
+  );
+}
+
+export default function HomePage() {
   const db = useFirestore();
-  const settingsRef = useMemoFirebase(() => doc(db, "settings", "store_config"), [db]);
+  const settingsRef = useMemoFirebase(
+    () => doc(db, "settings", "store_config_gembong"),
+    [db]
+  );
   const { data: settings } = useDoc(settingsRef);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "coming_soon">("all");
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
-  const filteredBranches = DEFAULT_BRANCHES.filter((branch) => {
-    const query = searchQuery.toLowerCase().trim();
-    const matchesSearch = 
-      !query ||
-      branch.region.toLowerCase().includes(query) ||
-      branch.name.toLowerCase().includes(query) ||
-      branch.code.toLowerCase().includes(query) ||
-      branch.address.toLowerCase().includes(query);
-    
-    if (filterStatus === "all") return matchesSearch;
-    return matchesSearch && branch.status === filterStatus;
-  });
+  const handleHeroMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTilt({
+      x: (e.clientX - rect.left) / rect.width - 0.5,
+      y: (e.clientY - rect.top) / rect.height - 0.5,
+    });
+  };
+
+  useEffect(() => {
+    setActiveBranch("gembong");
+  }, []);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setActiveIdx((prev) => (prev + 1) % SIGNATURE_DRINKS.length);
+      setAnimKey((k) => k + 1);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, [isPaused]);
+
+  const handleSelectDrink = (idx: number) => {
+    if (idx === activeIdx) return;
+    setActiveIdx(idx);
+    setAnimKey((k) => k + 1);
+  };
+
+  const activeDrink = SIGNATURE_DRINKS[activeIdx];
+  const brandName = settings?.name || "Zona Waktu";
 
   return (
     <div
-      className="min-h-screen relative font-sans flex flex-col justify-between"
-      style={{ 
-        backgroundColor: "#1c0505", 
-        backgroundImage: "radial-gradient(ellipse at 50% 0%, #7c1515 0%, #300606 60%, #120202 100%)",
-        color: "#ffffff" 
+      className="min-h-screen w-full overflow-x-hidden relative flex flex-col justify-between select-none transition-colors duration-1000 ease-out"
+      style={{
+        backgroundColor: activeDrink.bgBase,
+        backgroundImage: activeDrink.bgGradient,
+        color: "#f8f5f0",
       }}
     >
-      {/* Subtle Background Pattern */}
-      <div 
-        className="absolute inset-0 opacity-[0.06] pointer-events-none" 
-        style={{ backgroundImage: "radial-gradient(circle, white 1.5px, transparent 1.5px)", backgroundSize: "32px 32px" }}
+      {/* Keyframe Animations */}
+      <style>{`
+        @keyframes zwFloatSlow {
+          0%, 100% { transform: translate3d(0, 0, 0) rotate(-0.6deg); }
+          30% { transform: translate3d(0, -10px, 0) rotate(0.9deg); }
+          60% { transform: translate3d(0, -5px, 0) rotate(-0.2deg); }
+          80% { transform: translate3d(0, -8px, 0) rotate(0.4deg); }
+        }
+        @keyframes zwCupReveal {
+          0% {
+            opacity: 0;
+            transform: translateY(40px) scale(0.86) rotate(-4deg);
+            filter: blur(6px);
+          }
+          60% {
+            opacity: 1;
+            transform: translateY(-6px) scale(1.025) rotate(0.8deg);
+            filter: blur(0px);
+          }
+          82% {
+            transform: translateY(2px) scale(0.995) rotate(-0.3deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0px) scale(1) rotate(0deg);
+            filter: blur(0px);
+          }
+        }
+        @keyframes zwTextSlide {
+          0% {
+            opacity: 0;
+            transform: translateY(18px);
+            filter: blur(4px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0px);
+            filter: blur(0px);
+          }
+        }
+        @keyframes zwWatermarkDrift {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -46%) scale(0.96);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+        @keyframes zwGlowBreath {
+          0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+        }
+        .zw-cup-enter {
+          animation: zwCupReveal 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .zw-text-enter {
+          animation: zwTextSlide 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .zw-watermark-enter {
+          animation: zwWatermarkDrift 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .zw-float-idle {
+          animation: zwFloatSlow 7.5s ease-in-out infinite;
+          will-change: transform;
+        }
+        .zw-glow-breath {
+          animation: zwGlowBreath 6s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .zw-cup-enter, .zw-text-enter, .zw-watermark-enter, .zw-float-idle, .zw-glow-breath {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
+      {/* Subtle Vertical Pinstripe & Vignette Texture (like GlacÃ© reference) */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(90deg, #ffffff 0px, #ffffff 1px, transparent 1px, transparent 48px)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 50%, transparent 45%, rgba(0,0,0,0.65) 100%)",
+        }}
       />
 
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-30 w-full border-b border-white/10 backdrop-blur-xl bg-black/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-3.5 sm:py-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner shrink-0">
-              <Coffee className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-            </div>
-            <div>
-              <span className="text-[11px] sm:text-sm font-black tracking-[0.25em] sm:tracking-[0.3em] uppercase block leading-none">
-                {settings?.name || "ZONA WAKTU"}
-              </span>
-              <span className="text-[8px] sm:text-[9px] font-bold text-white/70 tracking-widest uppercase mt-0.5 sm:mt-1 block">
-                PORTAL MULTI-OUTLET
-              </span>
-            </div>
-          </div>
+      {/* Giant Background Serif Watermark */}
+      <div
+        key={`wm-${animKey}`}
+        className={`${playfair.className} zw-watermark-enter pointer-events-none absolute top-[44%] md:top-[48%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 whitespace-nowrap text-center leading-none tracking-tight`}
+        style={{
+          fontSize: "clamp(4.5rem, 15vw, 15.5rem)",
+          color: "rgba(255, 248, 240, 0.055)",
+          fontWeight: 500,
+        }}
+      >
+        {activeDrink.watermark}
+      </div>
 
-          {/* Quick Access Badges on Header */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Link href="/owner-login">
-              <Button variant="ghost" className="text-white hover:bg-white/10 border border-white/20 rounded-full px-3 sm:px-4 h-8 sm:h-9 text-[9px] sm:text-[11px] font-black uppercase tracking-wider flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-300" />
-                <span>Owner</span>
-              </Button>
-            </Link>
-            <Link href="/admin-login">
-              <Button variant="ghost" className="text-white hover:bg-white/10 border border-white/20 rounded-full px-3 sm:px-4 h-8 sm:h-9 text-[9px] sm:text-[11px] font-black uppercase tracking-wider flex items-center gap-1">
-                <UserCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-300" />
-                <span>Admin</span>
-              </Button>
-            </Link>
+      {/* Ambient Center Glow Behind Cup */}
+      <div
+        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] md:w-[540px] md:h-[540px] rounded-full blur-[100px] transition-all duration-1000 z-0"
+        style={{ backgroundColor: activeDrink.glowColor }}
+      />
+
+      {/* Floating Coffee Beans & Tea Leaves */}
+      <div className="pointer-events-none absolute inset-0 max-w-7xl mx-auto overflow-hidden z-10">
+        {activeDrink.beansConfig.map((bean, i) => (
+          <div
+            key={i}
+            className="absolute transition-all duration-1000 ease-out hidden sm:block"
+            style={{
+              top: bean.top,
+              left: bean.left,
+              width: `${bean.size}px`,
+              height: `${bean.size}px`,
+              transform: `rotate(${bean.rotate}deg)`,
+              filter: bean.blur ? `blur(${bean.blur})` : undefined,
+              opacity: 0.78,
+            }}
+          >
+            <div
+              className="w-full h-full zw-float-idle"
+              style={{ animationDelay: `${i * 0.7}s` }}
+            >
+              <FloatingElementSVG type={bean.type} accent={activeDrink.accentHex} />
+            </div>
           </div>
+        ))}
+      </div>
+
+      {/* ================= HEADER / NAVBAR ================= */}
+      <header className="relative z-30 w-full max-w-[1360px] mx-auto px-4 sm:px-8 md:px-12 pt-3.5 sm:pt-5 pb-2 sm:pb-3 flex items-center justify-between gap-2 sm:gap-4">
+        {/* Brand Logo (Left) */}
+        <Link href="/" className="flex items-center gap-2.5 sm:gap-3.5 group min-w-0">
+          <div className="relative h-9 w-9 sm:h-11 sm:w-11 rounded-full bg-white p-0.5 shadow-lg shadow-black/40 ring-1 ring-white/25 overflow-hidden shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <Image
+              src={settings?.logoHeader || "/images/hero/logo-zonawaktu.png"}
+              alt={brandName}
+              fill
+              className="object-contain rounded-full"
+              sizes="44px"
+            />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span
+              className={`${playfair.className} text-base sm:text-2xl font-semibold tracking-wide text-[#faf6f0] leading-none truncate`}
+            >
+              {brandName}
+            </span>
+            <span className="text-[8px] sm:text-[10px] font-medium tracking-[0.18em] sm:tracking-[0.22em] uppercase text-white/60 mt-1 flex items-center gap-1.5 whitespace-nowrap">
+              <span
+                className="h-1.5 w-1.5 rounded-full animate-pulse shrink-0"
+                style={{ backgroundColor: activeDrink.accentHex }}
+              />
+              Cabang Gembong
+            </span>
+          </div>
+        </Link>
+
+        {/* Center Menu Navigation Links (like GlacÃ© Header) */}
+        <nav className="hidden lg:flex items-center gap-7 text-xs font-medium tracking-wider text-white/70">
+          {SIGNATURE_DRINKS.map((drink, index) => {
+            const isCurrent = index === activeIdx;
+            return (
+              <button
+                key={drink.id}
+                type="button"
+                onClick={() => handleSelectDrink(index)}
+                className="relative py-1.5 transition-colors duration-300 hover:text-white cursor-pointer"
+                style={{ color: isCurrent ? "#ffffff" : undefined }}
+              >
+                <span>{drink.watermark}</span>
+                <span
+                  className="absolute bottom-0 left-0 h-[1.5px] transition-all duration-500 rounded-full"
+                  style={{
+                    width: isCurrent ? "100%" : "0%",
+                    backgroundColor: activeDrink.accentHex,
+                  }}
+                />
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Management Portal Access (Right) - Owner & Admin */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          <Link
+            href="/owner-login"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase bg-white/[0.06] hover:bg-white/[0.14] border border-white/15 text-white/90 hover:text-white backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <ShieldCheck
+              className="h-3 w-3 sm:h-3.5 sm:w-3.5"
+              style={{ color: activeDrink.accentHex }}
+            />
+            <span>Owner</span>
+          </Link>
+          <Link
+            href="/admin-login"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase bg-white/[0.06] hover:bg-white/[0.14] border border-white/15 text-white/90 hover:text-white backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+          >
+            <UserCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-300" />
+            <span>Admin</span>
+          </Link>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-8 sm:py-12 md:py-14 w-full flex-1 flex flex-col justify-center">
-        {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12 animate-in fade-in slide-in-from-top-6 duration-700">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 sm:px-4 sm:py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-3 sm:mb-4 shadow-sm">
-            <Flame className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-300 animate-pulse shrink-0" />
-            <span className="text-[9px] sm:text-xs font-black uppercase tracking-[0.2em] text-white">
-              SISTEM SENTRAL MULTI-CABANG
+      {/* ================= HERO MAIN SECTION (3-COLUMN GLACÃ‰ LAYOUT) ================= */}
+      <main
+        className="relative z-20 flex-1 w-full max-w-[1360px] mx-auto px-4 sm:px-8 md:px-12 py-2 sm:py-4 md:py-6 flex flex-col justify-center lg:grid lg:grid-cols-12 items-center gap-3.5 sm:gap-6 lg:gap-4"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseMove={handleHeroMouseMove}
+        onMouseLeave={() => {
+          setIsPaused(false);
+          setTilt({ x: 0, y: 0 });
+        }}
+      >
+        {/* LEFT COLUMN: Editorial Title, Description & Portal Action Buttons */}
+        <div className="w-full lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left order-2 lg:order-1 z-20">
+          {/* Outlet Status Pill */}
+          <div
+            className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-white/[0.05] backdrop-blur-md mb-2 sm:mb-4 border transition-colors duration-700"
+            style={{ borderColor: activeDrink.pillBorder }}
+          >
+            <Sparkles
+              className="h-2.5 w-2.5 sm:h-3 sm:w-3"
+              style={{ color: activeDrink.accentHex }}
+            />
+            <span
+              className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] sm:tracking-[0.2em]"
+              style={{ color: activeDrink.accentHex }}
+            >
+              Outlet &amp; Gudang Utama Gembong
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight uppercase leading-tight">
-            PILIH CABANG TOKO
-          </h1>
-          <p className="text-white/80 text-xs sm:text-sm md:text-base font-medium mt-2 sm:mt-3 max-w-xl mx-auto px-2">
-            Pilih area gerai di bawah ini untuk mengakses dashboard, operasional kasir, sistem karyawan, dan absensi cabang Anda.
-          </p>
+          {/* Animated Drink Editorial Heading */}
+          <div key={`title-${animKey}`} className="zw-text-enter space-y-1.5 sm:space-y-3">
+            <h1
+              className={`${playfair.className} text-3xl sm:text-5xl xl:text-[62px] font-normal leading-[1.05] tracking-tight text-[#fffcf8]`}
+            >
+              <span className="block">{activeDrink.titleLine1}</span>
+              <span className="block italic font-normal text-white/95">
+                {activeDrink.titleLine2}
+              </span>
+            </h1>
 
-          {/* Search and Filters Bar - Fully Mobile Optimized */}
-          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 max-w-xl mx-auto">
-            <div className="relative w-full">
-              <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari Gandrungmangu / Kedungreja / Teh Warga..."
-                className="w-full pl-10 sm:pl-11 pr-4 h-11 sm:h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-white/40 text-xs sm:text-sm font-medium backdrop-blur-md focus:border-white focus:ring-0"
-              />
-            </div>
-            <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0 justify-center">
-              <Button
-                variant={filterStatus === "all" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setFilterStatus("all")}
-                className={`rounded-xl text-[10px] sm:text-[11px] font-bold h-10 sm:h-11 px-3 uppercase ${filterStatus === "all" ? "bg-white text-[#7c1515]" : "text-white/80 hover:bg-white/10 border border-white/10"}`}
-              >
-                Semua
-              </Button>
-              <Button
-                variant={filterStatus === "active" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setFilterStatus("active")}
-                className={`rounded-xl text-[10px] sm:text-[11px] font-bold h-10 sm:h-11 px-3 uppercase ${filterStatus === "active" ? "bg-white text-[#7c1515]" : "text-white/80 hover:bg-white/10 border border-white/10"}`}
-              >
-                Aktif
-              </Button>
-            </div>
+            <p className="text-[11px] sm:text-sm text-white/65 max-w-sm sm:max-w-md leading-relaxed font-normal pt-0.5 sm:pt-1 line-clamp-2 sm:line-clamp-none">
+              {activeDrink.description}
+            </p>
           </div>
-        </div>
 
-        {/* Store Branches Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          {filteredBranches.map((branch, index) => {
-            const isActive = branch.status === "active";
-            
-            return (
-              <div 
-                key={branch.id}
-                className="animate-in fade-in slide-in-from-bottom-6 duration-700 w-full"
-                style={{ animationDelay: `${index * 120}ms` }}
-              >
-                <Card 
-                  className={`h-full rounded-[1.75rem] sm:rounded-[2rem] p-5 sm:p-7 flex flex-col justify-between transition-all duration-300 relative overflow-hidden backdrop-blur-xl border ${branch.theme.cardBg} ${branch.theme.cardBorder} ${
-                    isActive ? "hover:-translate-y-1.5 active:scale-[0.99]" : "opacity-75"
-                  }`}
+          {/* Primary Portal Action Buttons (Karyawan & Absensi GPS â€” Immediately Visible Above the Fold on Mobile) */}
+          <div className="w-full max-w-sm mt-3.5 sm:mt-7 pt-1 sm:pt-2 space-y-1.5 sm:space-y-2.5">
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-[0.22em] text-white/45 font-semibold mb-1.5 sm:mb-2">
+              Portal Akses Operasional
+            </p>
+
+            {/* Primary Pill Buttons (Side-by-Side 2 Columns on Mobile & Desktop) */}
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              <Link href="/employee-login" className="group block">
+                <div
+                  className="h-11 sm:h-12 px-4 sm:px-5 rounded-full flex items-center justify-between gap-2 transition-all duration-300 hover:scale-[1.03] active:scale-95 shadow-lg backdrop-blur-md"
+                  style={{
+                    backgroundColor: activeDrink.accentHex,
+                    color: "#140b05",
+                  }}
                 >
-                  {/* Glowing corner indicator */}
-                  {isActive && (
-                    <div className={`absolute -top-12 -right-12 w-32 h-32 ${branch.theme.glowColor} rounded-full blur-3xl pointer-events-none`} />
-                  )}
-
-                  <div>
-                    {/* Header Badges */}
-                    <div className="flex items-center justify-between gap-2 mb-4">
-                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className={`px-2.5 py-0.5 sm:py-1 rounded-lg text-[9px] sm:text-[10px] font-black tracking-widest uppercase border ${branch.theme.badgeBg} ${branch.theme.badgeText} ${branch.theme.badgeBorder}`}>
-                          {branch.code}
-                        </span>
-                        <span className={`px-2.5 py-0.5 sm:py-1 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-wider border ${branch.theme.tagBg}`}>
-                          {branch.branchNumber}
-                        </span>
-                      </div>
-                      
-                      {isActive ? (
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider shrink-0 ${branch.id === 'cabang-kedungreja' ? 'bg-emerald-100 border border-emerald-300 text-emerald-800' : 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300'}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${branch.id === 'cabang-kedungreja' ? 'bg-emerald-600' : 'bg-emerald-400'} animate-pulse`} />
-                          <span>Buka &bull; Aktif</span>
-                        </div>
-                      ) : (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-slate-700/50 border border-white/10 text-white/50 text-[9px] sm:text-[10px] font-black uppercase tracking-wider shrink-0">
-                          Segera
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Prominent Region Title - NEVER Truncated */}
-                    <div className="mb-4 sm:mb-5">
-                      <span className={`text-[10px] sm:text-[11px] font-black tracking-[0.25em] uppercase block ${branch.theme.subtextColor}`}>
-                        {branch.id === 'tehwarga' ? 'TEH WARGA' : 'ZONA WAKTU'}
-                      </span>
-                      <h2 className={`text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-black italic tracking-tight leading-tight uppercase mt-1 mb-2 ${branch.theme.regionTextColor} drop-shadow-sm break-words`}>
-                        {branch.region}
-                      </h2>
-                      <div className={`h-1 w-20 sm:w-28 rounded-full mb-2.5 ${branch.theme.accentLine}`} />
-                      <p className={`text-xs sm:text-sm font-semibold leading-snug ${branch.theme.subtextColor}`}>
-                        {branch.tagline}
-                      </p>
-                    </div>
-
-                    {/* Location & Hours Info */}
-                    <div className={`space-y-2 py-3.5 sm:py-4 border-y text-xs ${branch.theme.infoBorderColor} ${branch.theme.textColor}`}>
-                      <div className="flex items-start gap-2.5">
-                        <MapPin className="h-4 w-4 shrink-0 mt-0.5 opacity-70" />
-                        <span className="text-xs font-semibold leading-tight">{branch.address}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        <Clock className="h-4 w-4 shrink-0 opacity-70" />
-                        <span className="text-xs font-semibold">{branch.hours}</span>
-                      </div>
-                    </div>
-
-                    {/* Feature tags */}
-                    <div className="flex flex-wrap gap-1 sm:gap-1.5 my-4">
-                      {branch.features.map((feat, fIdx) => (
-                        <span 
-                          key={fIdx}
-                          className={`text-[8px] sm:text-[9px] font-bold px-2.5 py-0.5 sm:py-1 rounded-md border ${branch.theme.featureBg}`}
-                        >
-                          {feat}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                    <span className="text-[11px] sm:text-xs font-bold tracking-wide whitespace-nowrap">
+                      Karyawan
+                    </span>
                   </div>
+                  <ArrowUpRight className="h-3.5 w-3.5 opacity-75 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0" />
+                </div>
+              </Link>
 
-                  {/* Main Action Link Button */}
-                  <div className="pt-2">
-                    {isActive ? (
-                      <Link href={branch.route} className="block w-full">
-                        <Button className={`w-full ${branch.theme.btnBg} ${branch.theme.btnText} ${branch.theme.btnHover} rounded-2xl h-12 sm:h-14 font-black uppercase tracking-wider text-xs sm:text-sm shadow-xl transition-all flex items-center justify-center gap-2 group border-none`}>
-                          <span>MASUK KE TOKO {branch.region}</span>
-                          <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                      </Link>
-                    ) : (
-                      <Button 
-                        disabled 
-                        className="w-full bg-white/10 text-white/40 border border-white/10 rounded-2xl h-12 sm:h-14 font-bold uppercase tracking-wider text-xs cursor-not-allowed"
-                      >
-                        Tahap Pengembangan
-                      </Button>
-                    )}
+              <Link href="/absensi" className="group block">
+                <div
+                  className="h-11 sm:h-12 px-4 sm:px-5 rounded-full bg-white/[0.06] hover:bg-white/[0.13] border flex items-center justify-between gap-2 text-white transition-all duration-300 hover:scale-[1.03] active:scale-95 backdrop-blur-md"
+                  style={{ borderColor: activeDrink.pillBorder }}
+                >
+                  <div className="flex items-center gap-2">
+                    <CalendarCheck
+                      className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
+                      style={{ color: activeDrink.accentHex }}
+                    />
+                    <span className="text-[11px] sm:text-xs font-semibold tracking-wide whitespace-nowrap">
+                      Absensi GPS
+                    </span>
                   </div>
-                </Card>
-              </div>
-            );
-          })}
+                  <ArrowUpRight className="h-3.5 w-3.5 text-white/50 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
+                </div>
+              </Link>
+            </div>
+          </div>
         </div>
 
-        {/* Empty state if search doesn't match */}
-        {filteredBranches.length === 0 && (
-          <div className="text-center py-12 sm:py-16 bg-white/5 rounded-3xl border border-white/10 max-w-md mx-auto px-4">
-            <Store className="h-10 w-10 mx-auto text-white/30 mb-3" />
-            <p className="text-sm font-bold text-white uppercase tracking-wider">Cabang tidak ditemukan</p>
-            <p className="text-xs text-white/60 mt-1">Coba kata kunci &apos;Gandrungmangu&apos;, &apos;Kedungreja&apos;, atau &apos;Teh Warga&apos;.</p>
-          </div>
-        )}
+        {/* CENTER COLUMN: Hero Drink Cup Spotlight */}
+        <div className="w-full lg:col-span-3 flex flex-col items-center justify-center order-1 lg:order-2 relative z-20 my-0">
+          <div
+            className="relative w-[185px] h-[225px] sm:w-[290px] sm:h-[360px] md:w-[360px] md:h-[440px] flex items-center justify-center"
+            style={{
+              transform: `perspective(1100px) rotateY(${(tilt.x * 14).toFixed(2)}deg) rotateX(${(-tilt.y * 10).toFixed(2)}deg) translate3d(${(tilt.x * 14).toFixed(1)}px, ${(tilt.y * 10).toFixed(1)}px, 0)`,
+              transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+              transformStyle: "preserve-3d",
+            }}
+          >
+            {/* Breathing ambient glow behind cup */}
+            <div
+              className="zw-glow-breath absolute top-1/2 left-1/2 w-[85%] h-[70%] rounded-full blur-[60px] pointer-events-none"
+              style={{ backgroundColor: activeDrink.glowColor }}
+            />
+            {/* Soft Pedestal Shadow under Cup */}
+            <div className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 w-32 sm:w-44 h-6 sm:h-8 bg-black/80 blur-xl rounded-full pointer-events-none" />
+            <div
+              className="absolute bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 w-20 sm:w-28 h-2 sm:h-2.5 rounded-full blur-md transition-colors duration-700 pointer-events-none"
+              style={{ backgroundColor: activeDrink.glowColor }}
+            />
 
-        {/* Quick Shortcuts on Footer */}
-        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/70 text-center sm:text-left">
-          <div className="flex items-center gap-2 justify-center">
-            <Sparkles className="h-4 w-4 text-amber-300 shrink-0" />
-            <span className="font-semibold text-[11px] sm:text-xs">Zona Waktu Coffee & Teh Bakar &bull; Multi-Branch Portal</span>
+            {/* Main Animated High-Res Vector Cup & Dynamic Liquid Splash */}
+            <div
+              key={`cup-${animKey}`}
+              className="zw-cup-enter relative w-full h-full flex items-center justify-center"
+            >
+              <div className="relative w-full h-full zw-float-idle">
+                <HeroCupVisual variant={activeDrink.id} />
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center text-[11px] sm:text-xs">
-            <Link href="/zona_gdm" className="hover:text-amber-300 transition-colors font-bold underline-offset-4 hover:underline">
-              Gandrungmangu &rarr;
-            </Link>
-            <Link href="/zona_kedungreja" className="hover:text-cyan-300 transition-colors font-bold underline-offset-4 hover:underline">
-              Kedungreja &rarr;
-            </Link>
-            <Link href="/teh_warga_gdm" className="hover:text-emerald-300 transition-colors font-bold underline-offset-4 hover:underline">
-              Teh Warga GDM &rarr;
-            </Link>
-            <Link href="/zona_gembong" className="hover:text-violet-300 transition-colors font-bold underline-offset-4 hover:underline">
-              Gembong &rarr;
-            </Link>
-            <Link href="/absensi" className="hover:text-white transition-colors underline-offset-4 hover:underline">
-              Portal Absensi &rarr;
-            </Link>
+        </div>
+
+        {/* RIGHT COLUMN: Craft Note & 4 Interactive Drink Switcher Cards (GlacÃ© Style) */}
+        <div className="w-full lg:col-span-4 flex flex-col items-center lg:items-end text-center lg:text-left order-3 z-20">
+          <div className="w-full max-w-[340px] space-y-3 sm:space-y-5">
+            {/* Craft Subtitle & Story (Hidden on small mobile screens to keep main viewport clean & compact) */}
+            <div key={`craft-${animKey}`} className="zw-text-enter hidden sm:block space-y-2">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/45">
+                {activeDrink.badge}
+              </div>
+              <h2
+                className={`${playfair.className} italic text-2xl sm:text-3xl font-normal text-[#fffcf8]`}
+              >
+                {activeDrink.craftHeading}
+              </h2>
+              <p className="text-xs text-white/60 leading-relaxed">
+                {activeDrink.craftDescription}
+              </p>
+            </div>
+
+            {/* 4 Signature Drink Thumbnail Switcher */}
+            <div className="pt-0.5 sm:pt-1">
+              <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
+                {SIGNATURE_DRINKS.map((drink, idx) => {
+                  const isSelected = idx === activeIdx;
+                  return (
+                    <button
+                      key={drink.id}
+                      type="button"
+                      onClick={() => handleSelectDrink(idx)}
+                      aria-label={`Pilih ${drink.titleLine1} ${drink.titleLine2}`}
+                      className="group relative aspect-[4/4.3] sm:aspect-[3/4] rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex flex-col items-center justify-between overflow-hidden transition-all duration-300 cursor-pointer backdrop-blur-md"
+                      style={{
+                        backgroundColor: isSelected
+                          ? "rgba(255, 255, 255, 0.11)"
+                          : "rgba(255, 255, 255, 0.035)",
+                        border: isSelected
+                          ? `1.5px solid ${activeDrink.accentHex}`
+                          : "1px solid rgba(255, 255, 255, 0.12)",
+                        boxShadow: isSelected
+                          ? `0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 16px -4px ${activeDrink.glowColor}`
+                          : "none",
+                        transform: isSelected ? "translateY(-3px)" : "none",
+                      }}
+                    >
+                      <div className="relative w-full h-full flex items-center justify-center py-0.5 transition-transform duration-300 group-hover:scale-110">
+                        <HeroCupVisual variant={drink.id} isThumbnail />
+                      </div>
+                      <span
+                        className="text-[7.5px] sm:text-[8px] font-semibold tracking-wider uppercase truncate w-full text-center pt-0.5 sm:pt-1 transition-colors"
+                        style={{
+                          color: isSelected
+                            ? activeDrink.accentHex
+                            : "rgba(255,255,255,0.55)",
+                        }}
+                      >
+                        {drink.watermark}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Footer Branding */}
-      <footer className="relative z-20 px-4 sm:px-6 py-5 sm:py-6 max-w-7xl mx-auto w-full text-center border-t border-white/10 opacity-60">
-        <p className="text-[8px] sm:text-[9px] md:text-[10px] font-bold text-white uppercase tracking-[0.4em] sm:tracking-[0.6em]">
-          &copy; {new Date().getFullYear()} ZONA WAKTU &bull; TEH WARGA GANDRUNGMANGU &bull; MULTI-BRANCH SYSTEM
-        </p>
+      {/* ================= MINIMALIST FOOTER ================= */}
+      <footer className="relative z-20 w-full max-w-[1360px] mx-auto px-5 sm:px-8 md:px-12 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] tracking-[0.25em] uppercase text-white/40 border-t border-white/[0.06]">
+        <span>Zona Waktu &bull; Coffee &amp; Teh Bakar</span>
+        <div className="flex items-center gap-4">
+          <span>Cabang Gembong (ZW-01)</span>
+          <span className="hidden sm:inline">&bull;</span>
+          <span className="hidden sm:inline">Management System</span>
+        </div>
       </footer>
     </div>
   );

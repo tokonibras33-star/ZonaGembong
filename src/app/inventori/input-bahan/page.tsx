@@ -20,7 +20,6 @@ import {
   CreditCard,
   Landmark,
   CheckCircle2,
-  Split,
   FileDown
 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -183,11 +182,10 @@ export default function InputBahanBakuPage() {
   // Fetch Master Bahan Baku dynamically based on target location
   const materialsQuery = useMemoFirebase(() => {
     if (targetLocation === "gudang") {
-      // In Gudang mode, query primary master catalog (GDM has all unified physical materials)
-      return query(warehouseCollection(db, "bahan-baku", "gdm"), orderBy("nama", "asc"));
+      return query(warehouseCollection(db, "bahan-baku", "gembong"), orderBy("nama", "asc"));
     }
-    return query(branchCollection(db, "bahan-baku", selectedTargetBranch), orderBy("nama", "asc"));
-  }, [db, targetLocation, selectedTargetBranch]);
+    return query(branchCollection(db, "bahan-baku", "gembong"), orderBy("nama", "asc"));
+  }, [db, targetLocation]);
   
   const { data: rawMaterials } = useCollection(materialsQuery);
   const materials = useMemo(() => {
@@ -389,7 +387,6 @@ export default function InputBahanBakuPage() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  // Change Handler dengan Logika Auto-Calculate Sisa Pembagian Gudang
   const handleItemChange = (index: number, field: keyof InputItem, value: string | number) => {
     const newItems = [...items];
     const currentItem = newItems[index];
@@ -403,89 +400,17 @@ export default function InputBahanBakuPage() {
       };
     } else if (field === 'qty') {
       const totalQty = Math.max(0, Number(value));
-      // Saat total qty diubah: defaultkan porsi ke gudang aktif terpilih
-      if (selectedWarehouse === 'kedungreja') {
-        newItems[index] = {
-          ...currentItem,
-          qty: totalQty,
-          qtyGdm: 0,
-          qtyKedungreja: totalQty,
-          qtyGembong: 0,
-        };
-      } else if (selectedWarehouse === 'gembong') {
-        newItems[index] = {
-          ...currentItem,
-          qty: totalQty,
-          qtyGdm: 0,
-          qtyKedungreja: 0,
-          qtyGembong: totalQty,
-        };
-      } else {
-        newItems[index] = {
-          ...currentItem,
-          qty: totalQty,
-          qtyGdm: totalQty,
-          qtyKedungreja: 0,
-          qtyGembong: 0,
-        };
-      }
-    } else if (field === 'qtyGdm') {
-      const valGdm = Math.max(0, Number(value));
-      newItems[index] = { ...currentItem, qtyGdm: valGdm };
-    } else if (field === 'qtyKedungreja') {
-      const valKedungreja = Math.max(0, Number(value));
-      newItems[index] = { ...currentItem, qtyKedungreja: valKedungreja };
-    } else if (field === 'qtyGembong') {
-      const valGembong = Math.max(0, Number(value));
-      newItems[index] = { ...currentItem, qtyGembong: valGembong };
+      newItems[index] = {
+        ...currentItem,
+        qty: totalQty,
+        qtyGdm: 0,
+        qtyKedungreja: 0,
+        qtyGembong: totalQty,
+      };
     } else {
       newItems[index] = { ...currentItem, [field]: value };
     }
 
-    setItems(newItems);
-  };
-
-  // Quick Action: Terapkan 100% satu gudang ke semua baris bahan
-  const handleApplyAllWarehouse = (wId: WarehouseId) => {
-    setSelectedWarehouse(wId);
-    setItems(prev => prev.map(it => {
-      const total = it.qty || 0;
-      return {
-        ...it,
-        qtyGdm: wId === 'gdm' ? total : 0,
-        qtyKedungreja: wId === 'kedungreja' ? total : 0,
-        qtyGembong: wId === 'gembong' ? total : 0,
-      };
-    }));
-    toast({
-      title: "Gudang Diselaraskan",
-      description: `Seluruh kuantitas belanja dialokasikan 100% ke ${WAREHOUSE_LIST[wId].name}.`
-    });
-  };
-
-  // Quick Action per row: Preset Cepat
-  const handleRowPreset = (index: number, mode: 'gdm_all' | 'kdrj_all' | 'gmb_all' | 'split') => {
-    const newItems = [...items];
-    const total = newItems[index].qty || 0;
-    if (mode === 'gdm_all') {
-      newItems[index].qtyGdm = total;
-      newItems[index].qtyKedungreja = 0;
-      newItems[index].qtyGembong = 0;
-    } else if (mode === 'kdrj_all') {
-      newItems[index].qtyGdm = 0;
-      newItems[index].qtyKedungreja = total;
-      newItems[index].qtyGembong = 0;
-    } else if (mode === 'gmb_all') {
-      newItems[index].qtyGdm = 0;
-      newItems[index].qtyKedungreja = 0;
-      newItems[index].qtyGembong = total;
-    } else if (mode === 'split') {
-      const third = Math.floor(total / 3);
-      const rem = total % 3;
-      newItems[index].qtyGdm = third + (rem > 0 ? 1 : 0);
-      newItems[index].qtyKedungreja = third + (rem > 1 ? 1 : 0);
-      newItems[index].qtyGembong = third;
-    }
     setItems(newItems);
   };
 
@@ -534,12 +459,15 @@ export default function InputBahanBakuPage() {
 
       // Validasi pembagian gudang jika target adalah gudang
       if (targetLocation === "gudang") {
-        const totalAllocated = (item.qtyGdm || 0) + (item.qtyKedungreja || 0);
+        if (!item.qtyGembong && item.qty > 0) {
+          item.qtyGembong = item.qty;
+        }
+        const totalAllocated = Number(item.qtyGembong || item.qty || 0);
         if (totalAllocated !== item.qty) {
           toast({
             variant: "destructive",
             title: "Alokasi Gudang Belum Sesuai",
-            description: `Pada bahan "${mat?.nama}", total alokasi (GDM: ${item.qtyGdm || 0} + Kedungreja: ${item.qtyKedungreja || 0} = ${totalAllocated}) harus sama dengan Total Beli (${item.qty}).`,
+            description: `Pada bahan "${mat?.nama}", total alokasi (${totalAllocated}) harus sama dengan Total Beli (${item.qty}).`,
           });
           return;
         }
@@ -553,8 +481,6 @@ export default function InputBahanBakuPage() {
       const numericAdminFee = purchaseType === "supplier" ? cleanNumber(adminFee) : 0;
       
       const logItems: LogItemDoc[] = [];
-      let totalGdmUnits = 0;
-      let totalKdrjUnits = 0;
 
       for (const item of validItems) {
         const material = materials?.find(m => m.id === item.materialId);
@@ -575,60 +501,19 @@ export default function InputBahanBakuPage() {
         const updated = applyPurchase(currentMaterial, totalBulkEquivalent, item.price);
 
         if (isTargetGudang) {
-          const qtyGdm = Number(item.qtyGdm || 0);
-          const qtyKedungreja = Number(item.qtyKedungreja || 0);
-          const qtyGembong = Number(item.qtyGembong || 0);
+          const qtyGembong = Number(item.qty || 0);
+          const gmbRef = warehouseDoc(db, "bahan-baku", item.materialId, "gembong");
+          const gmbSmallUnits = qtyGembong * actualConversion;
+          const gmbBulkUnits = Math.floor(gmbSmallUnits / (standardConversion || 1));
+          const gmbRemSmall = Math.round((gmbSmallUnits - (gmbBulkUnits * standardConversion)) * 100) / 100;
 
-          totalGdmUnits += qtyGdm;
-          totalKdrjUnits += qtyKedungreja;
-
-          // 1. Eksekusi Porsi Gudang GDM jika ada
-          if (qtyGdm > 0) {
-            const gdmRef = warehouseDoc(db, "bahan-baku", item.materialId, "gdm");
-            const gdmSmallUnits = qtyGdm * actualConversion;
-            const gdmBulkUnits = Math.floor(gdmSmallUnits / (standardConversion || 1));
-            const gdmRemSmall = Math.round((gdmSmallUnits - (gdmBulkUnits * standardConversion)) * 100) / 100;
-
-            const gdmPayload: Record<string, unknown> = {
-              currentPrice: item.price,
-              hargaSatuanKecil: pricePerKecil,
-            };
-            if (gdmBulkUnits > 0) gdmPayload.qtyBesar = increment(gdmBulkUnits);
-            if (gdmRemSmall > 0) gdmPayload.qtyGudangKecil = increment(gdmRemSmall);
-            batch.update(gdmRef, gdmPayload);
-          }
-
-          // 2. Eksekusi Porsi Gudang Kedungreja jika ada
-          if (qtyKedungreja > 0) {
-            const kdrjRef = warehouseDoc(db, "bahan-baku", item.materialId, "kedungreja");
-            const kdrjSmallUnits = qtyKedungreja * actualConversion;
-            const kdrjBulkUnits = Math.floor(kdrjSmallUnits / (standardConversion || 1));
-            const kdrjRemSmall = Math.round((kdrjSmallUnits - (kdrjBulkUnits * standardConversion)) * 100) / 100;
-
-            const kdrjPayload: Record<string, unknown> = {
-              currentPrice: item.price,
-              hargaSatuanKecil: pricePerKecil,
-            };
-            if (kdrjBulkUnits > 0) kdrjPayload.qtyBesar = increment(kdrjBulkUnits);
-            if (kdrjRemSmall > 0) kdrjPayload.qtyGudangKecil = increment(kdrjRemSmall);
-            batch.update(kdrjRef, kdrjPayload);
-          }
-
-          // 3. Eksekusi Porsi Gudang Gembong jika ada
-          if (qtyGembong > 0) {
-            const gmbRef = warehouseDoc(db, "bahan-baku", item.materialId, "gembong");
-            const gmbSmallUnits = qtyGembong * actualConversion;
-            const gmbBulkUnits = Math.floor(gmbSmallUnits / (standardConversion || 1));
-            const gmbRemSmall = Math.round((gmbSmallUnits - (gmbBulkUnits * standardConversion)) * 100) / 100;
-
-            const gmbPayload: Record<string, unknown> = {
-              currentPrice: item.price,
-              hargaSatuanKecil: pricePerKecil,
-            };
-            if (gmbBulkUnits > 0) gmbPayload.qtyBesar = increment(gmbBulkUnits);
-            if (gmbRemSmall > 0) gmbPayload.qtyGudangKecil = increment(gmbRemSmall);
-            batch.update(gmbRef, gmbPayload);
-          }
+          const gmbPayload: Record<string, unknown> = {
+            currentPrice: item.price,
+            hargaSatuanKecil: pricePerKecil,
+          };
+          if (gmbBulkUnits > 0) gmbPayload.qtyBesar = increment(gmbBulkUnits);
+          if (gmbRemSmall > 0) gmbPayload.qtyGudangKecil = increment(gmbRemSmall);
+          batch.update(gmbRef, gmbPayload);
         } else {
           // Eksekusi Target Kontainer Toko
           const containerRef = branchDoc(db, "bahan-baku", item.materialId, selectedTargetBranch);
@@ -649,9 +534,7 @@ export default function InputBahanBakuPage() {
           materialCode: material?.code || "-",
           isBeliSendiri: isBeliSendiri,
           qty: item.qty,
-          qtyGdm: isTargetGudang ? Number(item.qtyGdm || 0) : undefined,
-          qtyKedungreja: isTargetGudang ? Number(item.qtyKedungreja || 0) : undefined,
-          qtyGembong: isTargetGudang ? Number(item.qtyGembong || 0) : undefined,
+          qtyGembong: isTargetGudang ? Number(item.qty || 0) : undefined,
           addedBulkQty: fullBulkUnits,
           addedSmallUnits: remainderSmallUnits,
           unit: material?.satuanBesar || "-",
@@ -706,18 +589,9 @@ export default function InputBahanBakuPage() {
 
       await batch.commit();
 
-      let targetDescription = "";
-      if (isTargetGudang) {
-        if (totalGdmUnits > 0 && totalKdrjUnits > 0) {
-          targetDescription = `Multi-Gudang (GDM: ${totalGdmUnits}, Kedungreja: ${totalKdrjUnits})`;
-        } else if (totalKdrjUnits > 0) {
-          targetDescription = "Gudang Kedungreja";
-        } else {
-          targetDescription = "Gudang Gandrungmangu (GDM)";
-        }
-      } else {
-        targetDescription = BRANCH_LIST[selectedTargetBranch].name;
-      }
+      const targetDescription = isTargetGudang
+        ? WAREHOUSE_LIST[selectedWarehouse].name
+        : BRANCH_LIST[selectedTargetBranch].name;
 
       toast({
         title: "Input Bahan Berhasil Disimpan",
@@ -938,219 +812,6 @@ export default function InputBahanBakuPage() {
                   </div>
                 </div>
 
-                {/* 2. Switcher Lokasi Spesifik / Multi-Gudang per Nota */}
-                {targetLocation === "gudang" ? (
-                  /* 2 TOMBOL SWITCHER GUDANG UTAMA + FITUR MULTI-GUDANG */
-                  <div className="space-y-3 p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-600 block">
-                        Alokasi Gudang Utama Penerimaan:
-                      </Label>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[8.5px] font-bold text-slate-400 uppercase">Set Semua Baris:</span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleApplyAllWarehouse('gdm')}
-                          className={cn(
-                            "h-6 rounded-lg text-[8px] font-black uppercase px-2 gap-1",
-                            selectedWarehouse === 'gdm' ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "bg-white text-slate-600"
-                          )}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          Semua GDM
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleApplyAllWarehouse('kedungreja')}
-                          className={cn(
-                            "h-6 rounded-lg text-[8px] font-black uppercase px-2 gap-1",
-                            selectedWarehouse === 'kedungreja' ? "border-cyan-500 bg-cyan-50 text-cyan-700" : "bg-white text-slate-600"
-                          )}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" />
-                          Semua Kedungreja
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleApplyAllWarehouse('gembong')}
-                          className={cn(
-                            "h-6 rounded-lg text-[8px] font-black uppercase px-2 gap-1",
-                            selectedWarehouse === 'gembong' ? "border-violet-500 bg-violet-50 text-violet-700" : "bg-white text-slate-600"
-                          )}
-                        >
-                          <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
-                          Semua Gembong
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleApplyAllWarehouse('gdm')}
-                        className={cn(
-                          "p-3 rounded-xl border text-left transition-all flex flex-col justify-between",
-                          selectedWarehouse === 'gdm'
-                            ? "bg-slate-900 border-slate-900 text-white shadow-sm scale-[1.01]"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
-                          <span className="text-xs font-black uppercase">Gudang GDM</span>
-                        </div>
-                        <span className={cn(
-                          "text-[9px] font-bold mt-1",
-                          selectedWarehouse === 'gdm' ? "text-slate-300" : "text-slate-500"
-                        )}>
-                          Terpadu ZW & TW
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleApplyAllWarehouse('kedungreja')}
-                        className={cn(
-                          "p-3 rounded-xl border text-left transition-all flex flex-col justify-between",
-                          selectedWarehouse === 'kedungreja'
-                            ? "bg-slate-900 border-slate-900 text-white shadow-sm scale-[1.01]"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-cyan-400 shrink-0" />
-                          <span className="text-xs font-black uppercase">Gudang Kedungreja</span>
-                        </div>
-                        <span className={cn(
-                          "text-[9px] font-bold mt-1",
-                          selectedWarehouse === 'kedungreja' ? "text-slate-300" : "text-slate-500"
-                        )}>
-                          Gudang Kedungreja
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleApplyAllWarehouse('gembong')}
-                        className={cn(
-                          "p-3 rounded-xl border text-left transition-all flex flex-col justify-between",
-                          selectedWarehouse === 'gembong'
-                            ? "bg-violet-950 border-violet-900 text-white shadow-sm scale-[1.01]"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-violet-400 shrink-0" />
-                          <span className="text-xs font-black uppercase">Gudang Gembong</span>
-                        </div>
-                        <span className={cn(
-                          "text-[9px] font-bold mt-1",
-                          selectedWarehouse === 'gembong' ? "text-violet-300" : "text-slate-500"
-                        )}>
-                          Mandiri / Berdiri Sendiri
-                        </span>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-600 bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-100">
-                      <Split className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>
-                        <strong>Fitur Pembagian Qty Otomatis:</strong> Anda dapat langsung membagi kuantitas bahan pada setiap baris item ke Gudang GDM, Kedungreja, atau Gembong.
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  /* 3 TOMBOL SWITCHER KONTAINER TOKO */
-                  <div className="space-y-2 p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80">
-                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-600 block">
-                      Pilih Kontainer Toko Tujuan (4 Outlet):
-                    </Label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTargetBranch('gdm')}
-                        className={cn(
-                          "p-3 rounded-xl border text-left transition-all",
-                          selectedTargetBranch === 'gdm'
-                            ? "bg-slate-900 border-slate-900 text-white shadow-sm scale-[1.01]"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
-                          <span className="text-xs font-black uppercase">ZW GDM</span>
-                        </div>
-                        <span className={cn("text-[8px] font-bold block mt-0.5", selectedTargetBranch === 'gdm' ? "text-slate-300" : "text-slate-400")}>
-                          Gandrungmangu
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTargetBranch('kedungreja')}
-                        className={cn(
-                          "p-3 rounded-xl border text-left transition-all",
-                          selectedTargetBranch === 'kedungreja'
-                            ? "bg-slate-900 border-slate-900 text-white shadow-sm scale-[1.01]"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-cyan-400 shrink-0" />
-                          <span className="text-xs font-black uppercase">Kedungreja</span>
-                        </div>
-                        <span className={cn("text-[8px] font-bold block mt-0.5", selectedTargetBranch === 'kedungreja' ? "text-slate-300" : "text-slate-400")}>
-                          ZW Kedungreja
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTargetBranch('tehwarga')}
-                        className={cn(
-                          "p-3 rounded-xl border text-left transition-all",
-                          selectedTargetBranch === 'tehwarga'
-                            ? "bg-slate-900 border-slate-900 text-white shadow-sm scale-[1.01]"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
-                          <span className="text-xs font-black uppercase">Teh Warga</span>
-                        </div>
-                        <span className={cn("text-[8px] font-bold block mt-0.5", selectedTargetBranch === 'tehwarga' ? "text-slate-300" : "text-slate-400")}>
-                          Teh Warga GDM
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTargetBranch('gembong')}
-                        className={cn(
-                          "p-3 rounded-xl border text-left transition-all",
-                          selectedTargetBranch === 'gembong'
-                            ? "bg-violet-950 border-violet-900 text-white shadow-sm scale-[1.01]"
-                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-violet-400 shrink-0" />
-                          <span className="text-xs font-black uppercase">ZW Gembong</span>
-                        </div>
-                        <span className={cn("text-[8px] font-bold block mt-0.5", selectedTargetBranch === 'gembong' ? "text-violet-300" : "text-slate-400")}>
-                          Cabang Gembong
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
                 {/* Header Nota: Jenis Pembelian & Nomor Nota */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -1292,11 +953,6 @@ export default function InputBahanBakuPage() {
                     {items.map((item, index) => {
                       const selectedMat = materials?.find(m => m.id === item.materialId);
                       const isBeliSendiri = selectedMat?.metodePembelian === "Beli Sendiri" || purchaseType === "belanja";
-                      const qtyGdm = item.qtyGdm || 0;
-                      const qtyKdrj = item.qtyKedungreja || 0;
-                      const qtyGmb = item.qtyGembong || 0;
-                      const totalAllocated = qtyGdm + qtyKdrj + qtyGmb;
-                      const isAllocationMatch = totalAllocated === (item.qty || 0);
                       
                       return (
                         <div key={index} className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-3.5 relative group">
@@ -1379,140 +1035,10 @@ export default function InputBahanBakuPage() {
                             </div>
                           </div>
 
-                          {/* KOTAK PEMBAGIAN GUDANG (KHUSUS MODE GUDANG UTAMA) */}
-                          {targetLocation === "gudang" && (item.qty > 0) && (
-                            <div className="p-3 bg-white rounded-xl border border-slate-200/80 space-y-2">
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[9px]">
-                                <div className="flex items-center gap-1.5">
-                                  <Split className="h-3.5 w-3.5 text-primary" />
-                                  <span className="font-black uppercase tracking-wider text-slate-700">
-                                    Pembagian Alokasi Gudang ({item.qty} {selectedMat?.satuanBesar || "Unit"}):
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRowPreset(index, 'gdm_all')}
-                                    className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-[8px] font-black uppercase text-slate-600"
-                                  >
-                                    100% GDM
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRowPreset(index, 'kdrj_all')}
-                                    className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-[8px] font-black uppercase text-slate-600"
-                                  >
-                                    100% Kedungreja
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRowPreset(index, 'gmb_all')}
-                                    className="px-2 py-0.5 rounded bg-violet-100 hover:bg-violet-200 text-[8px] font-black uppercase text-violet-700"
-                                  >
-                                    100% Gembong
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRowPreset(index, 'split')}
-                                    className="px-2 py-0.5 rounded bg-indigo-50 hover:bg-indigo-100 text-[8px] font-black uppercase text-indigo-700"
-                                  >
-                                    Bagi Rata
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-                                {/* Alokasi Gudang GDM */}
-                                <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50/50 border border-emerald-200/60">
-                                  <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <span className="text-[8.5px] font-black uppercase text-emerald-800 block leading-tight truncate">
-                                      GDM:
-                                    </span>
-                                  </div>
-                                  <div className="relative w-20">
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      max={item.qty}
-                                      value={item.qtyGdm ?? 0}
-                                      onChange={(e) => handleItemChange(index, 'qtyGdm', Number(e.target.value))}
-                                      className="h-8 rounded-lg bg-white border-emerald-300 text-center font-black text-xs text-emerald-900 pr-5"
-                                    />
-                                    <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[7px] font-bold text-slate-400">
-                                      {selectedMat?.satuanBesar || "U"}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Alokasi Gudang Kedungreja */}
-                                <div className="flex items-center gap-2 p-2 rounded-lg bg-cyan-50/50 border border-cyan-200/60">
-                                  <div className="h-2 w-2 rounded-full bg-cyan-500 shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <span className="text-[8.5px] font-black uppercase text-cyan-800 block leading-tight truncate">
-                                      Kedungreja:
-                                    </span>
-                                  </div>
-                                  <div className="relative w-20">
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      max={item.qty}
-                                      value={item.qtyKedungreja ?? 0}
-                                      onChange={(e) => handleItemChange(index, 'qtyKedungreja', Number(e.target.value))}
-                                      className="h-8 rounded-lg bg-white border-cyan-300 text-center font-black text-xs text-cyan-900 pr-5"
-                                    />
-                                    <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[7px] font-bold text-slate-400">
-                                      {selectedMat?.satuanBesar || "U"}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Alokasi Gudang Gembong */}
-                                <div className="flex items-center gap-2 p-2 rounded-lg bg-violet-50/50 border border-violet-200/60">
-                                  <div className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <span className="text-[8.5px] font-black uppercase text-violet-800 block leading-tight truncate">
-                                      Gembong:
-                                    </span>
-                                  </div>
-                                  <div className="relative w-20">
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      max={item.qty}
-                                      value={item.qtyGembong ?? 0}
-                                      onChange={(e) => handleItemChange(index, 'qtyGembong', Number(e.target.value))}
-                                      className="h-8 rounded-lg bg-white border-violet-300 text-center font-black text-xs text-violet-900 pr-5"
-                                    />
-                                    <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[7px] font-bold text-slate-400">
-                                      {selectedMat?.satuanBesar || "U"}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Status Validasi Alokasi */}
-                              {!isAllocationMatch && (
-                                <p className="text-[8px] font-bold text-rose-600">
-                                  *Total alokasi ({totalAllocated}) belum sesuai dengan Total Beli ({item.qty}).
-                                </p>
-                              )}
-                            </div>
-                          )}
-
                           {/* Subtotal Item */}
                           <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold px-1 pt-1 border-t border-slate-100">
                             <span>
-                              {targetLocation === "gudang" && (
-                                <span className="mr-2 text-[8.5px] font-black uppercase bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">
-                                  GDM: {qtyGdm} | Kedungreja: {qtyKdrj} | Gembong: {qtyGmb}
-                                </span>
-                              )}
                               Total: {item.qty} {selectedMat?.satuanBesar || "Unit"} x Rp {(item.price || 0).toLocaleString('id-ID')}
-                            </span>
-                            <span className="font-black text-slate-900 text-xs">
-                              Rp {(item.qty * item.price).toLocaleString('id-ID')}
                             </span>
                             <span className="font-black text-slate-900 text-xs">
                               Rp {(item.qty * item.price).toLocaleString('id-ID')}

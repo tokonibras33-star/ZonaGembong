@@ -95,13 +95,13 @@ export async function determineAccountType(
   if (!inputUser) return "unknown";
 
   // 1. Owner Check
-  const ownerUsernames = ["owner", "ownerzona", "zonagdm", "zonakdrj", "zonakedungreja", "tehgdm", "tehwargagdm", "zonagembong", "zonagmb"];
+  const ownerUsernames = ["owner", "ownerzona", "zonagembong", "zonagmb"];
   if (ownerUsernames.includes(inputUser)) {
     return "owner";
   }
 
   // 2. Admin Check
-  const adminUsernames = ["admin", "adminzona", "adminkedungreja", "admintehwarga", "admingembong", "admingmb"];
+  const adminUsernames = ["admin", "adminzona", "admingembong", "admingmb"];
   if (adminUsernames.includes(inputUser)) {
     return "admin";
   }
@@ -111,9 +111,6 @@ export async function determineAccountType(
 
   // 3. Check System Employee Logins (Kasir & POS)
   const systemDocNames = [
-    "system_logins_gdm",
-    "system_logins_kedungreja",
-    "system_logins_tehwarga",
     "system_logins_gembong"
   ];
   if (expectedBranch) {
@@ -137,7 +134,7 @@ export async function determineAccountType(
 
   // 4. Check Absensi Logins (karyawan collection & absensi_logins_<branch>)
   try {
-    const kSnap = await getDocs(collection(db, "karyawan"));
+    const kSnap = await getDocs(collection(db, "karyawan_gembong"));
     const foundK = kSnap.docs.some(d => {
       const dData = d.data();
       return String(dData.username || "").trim().toLowerCase() === inputUser;
@@ -149,9 +146,6 @@ export async function determineAccountType(
 
   if (!isAbsensi) {
     const absensiDocNames = [
-      "absensi_logins_gdm",
-      "absensi_logins_kedungreja",
-      "absensi_logins_tehwarga",
       "absensi_logins_gembong"
     ];
     for (const docName of absensiDocNames) {
@@ -237,7 +231,7 @@ export async function provisionAuthUserWithoutSessionSwitch(
       nama: profile.nama || username,
       email,
       role: profile.role || "employee",
-      cabang: normalizeBranchId(profile.cabang || "gdm"),
+      cabang: normalizeBranchId(profile.cabang || "gembong"),
       status: profile.status || "aktif",
       karyawanId: profile.karyawanId || null,
       accountCategory: profile.accountCategory || (profile.role === "admin" ? "admin" : profile.role === "owner" ? "owner" : profile.karyawanId ? "absensi" : "system"),
@@ -363,7 +357,26 @@ export async function loginWithFirebaseAuth(
     // 3. Resolve & Verify User Profile in Firestore
     const userProfile = await resolveUserProfile(inputUser, params.expectedRole, params.expectedBranch);
 
-    // Double Check Strict Segregation after profile resolved
+    // 2.5 Strict Role Enforcement Check (Cegah Karyawan/Absensi masuk ke Portal Owner/Admin)
+    if (params.expectedRole && userProfile.role !== params.expectedRole) {
+      // Owner diizinkan masuk ke semua portal jika dibutuhkan, namun Admin/Employee tidak boleh naik level
+      const isOwnerOverride = userProfile.role === "owner";
+      if (!isOwnerOverride) {
+        await signOut(auth).catch(() => {});
+        const roleLabel =
+          params.expectedRole === "owner"
+            ? "Owner"
+            : params.expectedRole === "admin"
+            ? "Admin"
+            : "Karyawan";
+        return {
+          success: false,
+          error: `Akses Ditolak: Akun Anda tidak memiliki otoritas sebagai ${roleLabel}.`,
+        };
+      }
+    }
+
+    // 3. Double Check Strict Segregation after profile resolved
     if (params.loginType === "system" && userProfile.role === "employee") {
       if (userProfile.accountCategory === "absensi") {
         await signOut(auth).catch(() => {});
@@ -458,13 +471,8 @@ async function checkAndMigrateFirestoreUserToAuth(
   // A. Check Owner Credentials (Unified & Branch Aliases)
   if (!loginType || loginType === "owner" || loginType === "any") {
     const ownerConfigs = [
-      { username: "owner", pass: "ownerzona", role: "owner", cabang: "all", nama: "Owner Zona Waktu Group" },
-      { username: "ownerzona", pass: "ownerzona", role: "owner", cabang: "all", nama: "Owner Zona Waktu Group" },
-      { username: "zonagdm", pass: "ownerzona", role: "owner", cabang: "gdm", nama: "Owner Zona Waktu GDM" },
-      { username: "zonakdrj", pass: "ownerzona", role: "owner", cabang: "kedungreja", nama: "Owner Zona Waktu Kedungreja" },
-      { username: "zonakedungreja", pass: "ownerzona", role: "owner", cabang: "kedungreja", nama: "Owner Zona Waktu Kedungreja" },
-      { username: "tehgdm", pass: "ownerteh", role: "owner", cabang: "tehwarga", nama: "Owner Teh Warga GDM" },
-      { username: "tehwargagdm", pass: "ownerteh", role: "owner", cabang: "tehwarga", nama: "Owner Teh Warga GDM" },
+      { username: "owner", pass: "ownerzona", role: "owner", cabang: "gembong", nama: "Owner Zona Waktu Gembong" },
+      { username: "ownerzona", pass: "ownerzona", role: "owner", cabang: "gembong", nama: "Owner Zona Waktu Gembong" },
       { username: "zonagembong", pass: "ownerzona", role: "owner", cabang: "gembong", nama: "Owner Zona Waktu Gembong" },
       { username: "zonagmb", pass: "ownerzona", role: "owner", cabang: "gembong", nama: "Owner Zona Waktu Gembong" },
     ];
@@ -474,7 +482,7 @@ async function checkAndMigrateFirestoreUserToAuth(
       await provisionAuthUserWithoutSessionSwitch(inputUser, inputPass, {
         nama: matchedOwner.nama,
         role: "owner",
-        cabang: matchedOwner.cabang as BranchId,
+        cabang: "gembong",
         accountCategory: "owner",
         status: "aktif"
       });
@@ -484,11 +492,11 @@ async function checkAndMigrateFirestoreUserToAuth(
 
   // B. Check Admin Credentials from Firestore (Unified & Branch Aliases)
   if (!loginType || loginType === "admin" || loginType === "any") {
-    if ((inputUser === "admin" || inputUser === "adminzona") && (inputPass === "admin00" || inputPass === "admin")) {
+    if ((inputUser === "admin" || inputUser === "adminzona" || inputUser === "admingembong" || inputUser === "admingmb") && (inputPass === "admin00" || inputPass === "admin")) {
       await provisionAuthUserWithoutSessionSwitch(inputUser, inputPass, {
-        nama: "Admin Zona Waktu Group",
+        nama: "Admin Zona Waktu Gembong",
         role: "admin",
-        cabang: "all",
+        cabang: "gembong",
         accountCategory: "admin",
         status: "aktif"
       });
@@ -496,11 +504,8 @@ async function checkAndMigrateFirestoreUserToAuth(
     }
 
     const adminDocNames = [
-      { docId: "admin_gdm", cabang: "gdm", defaultUser: "adminzona", defaultPass: "admin00", nama: "Admin Gandrungmangu" },
-      { docId: "admin_kedungreja", cabang: "kedungreja", defaultUser: "adminkedungreja", defaultPass: "admin00", nama: "Admin Kedungreja" },
-      { docId: "admin_tehwarga", cabang: "tehwarga", defaultUser: "admintehwarga", defaultPass: "admin00", nama: "Admin Teh Warga" },
       { docId: "admin_gembong", cabang: "gembong", defaultUser: "admingembong", defaultPass: "admin00", nama: "Admin Gembong" },
-      { docId: "admin", cabang: "gdm", defaultUser: "adminzona", defaultPass: "admin00", nama: "Admin Zona Waktu" },
+      { docId: "admin", cabang: "gembong", defaultUser: "adminzona", defaultPass: "admin00", nama: "Admin Zona Waktu" },
     ];
 
     for (const item of adminDocNames) {
@@ -517,7 +522,7 @@ async function checkAndMigrateFirestoreUserToAuth(
           await provisionAuthUserWithoutSessionSwitch(inputUser, inputPass, {
             nama: item.nama,
             role: "admin",
-            cabang: item.cabang as BranchId,
+            cabang: "gembong",
             accountCategory: "admin",
             status: "aktif"
           });
@@ -530,7 +535,7 @@ async function checkAndMigrateFirestoreUserToAuth(
   // C. Check Karyawan collection (HANYA jika loginType !== "system")
   if (loginType !== "system") {
     try {
-      const kSnap = await getDocs(collection(db, "karyawan"));
+      const kSnap = await getDocs(collection(db, "karyawan_gembong"));
       const foundK = kSnap.docs.find(d => {
         const dData = d.data();
         return (
@@ -541,11 +546,10 @@ async function checkAndMigrateFirestoreUserToAuth(
 
       if (foundK) {
         const dData = foundK.data();
-        const cabang = normalizeBranchId(dData.cabang || expectedBranch || "gdm");
         await provisionAuthUserWithoutSessionSwitch(inputUser, inputPass, {
           nama: dData.nama || inputUser,
           role: "employee",
-          cabang,
+          cabang: "gembong",
           karyawanId: foundK.id,
           accountCategory: "absensi",
           status: dData.status === "nonaktif" ? "nonaktif" : "aktif"
@@ -558,9 +562,6 @@ async function checkAndMigrateFirestoreUserToAuth(
   // D. Check System Employee Logins (Kasir & POS) (HANYA jika loginType !== "absensi")
   if (loginType !== "absensi") {
     const sysDocNames = [
-      "system_logins_gdm",
-      "system_logins_kedungreja",
-      "system_logins_tehwarga",
       "system_logins_gembong"
     ];
 
@@ -574,11 +575,10 @@ async function checkAndMigrateFirestoreUserToAuth(
             String(u.password || "").trim() === inputPass
           );
           if (found) {
-            const cabang = normalizeBranchId((found.cabang as string) || (docName.includes("gembong") ? "gembong" : docName.includes("kedungreja") ? "kedungreja" : docName.includes("tehwarga") ? "tehwarga" : "gdm"));
             await provisionAuthUserWithoutSessionSwitch(inputUser, inputPass, {
               nama: (found.nama as string) || inputUser,
               role: "employee",
-              cabang,
+              cabang: "gembong",
               karyawanId: null,
               accountCategory: "system",
               status: "aktif"
@@ -593,9 +593,6 @@ async function checkAndMigrateFirestoreUserToAuth(
   // E. Check Absensi Logins documents (HANYA jika loginType !== "system")
   if (loginType !== "system") {
     const absDocNames = [
-      "absensi_logins_gdm",
-      "absensi_logins_kedungreja",
-      "absensi_logins_tehwarga",
       "absensi_logins_gembong"
     ];
 
@@ -609,11 +606,10 @@ async function checkAndMigrateFirestoreUserToAuth(
             String(u.password || "").trim() === inputPass
           );
           if (found) {
-            const cabang = normalizeBranchId((found.cabang as string) || (docName.includes("gembong") ? "gembong" : docName.includes("kedungreja") ? "kedungreja" : docName.includes("tehwarga") ? "tehwarga" : "gdm"));
             await provisionAuthUserWithoutSessionSwitch(inputUser, inputPass, {
               nama: (found.nama as string) || inputUser,
               role: "employee",
-              cabang,
+              cabang: "gembong",
               karyawanId: (found.id as string) || null,
               accountCategory: "absensi",
               status: "aktif"
@@ -750,11 +746,8 @@ export async function syncAllAccountsToFirebaseAuth(
     });
 
     const adminDocs = [
-      { docId: "admin_gdm", defaultUser: "adminzona", defaultPass: "admin00", cabang: "gdm", nama: "Admin Gandrungmangu" },
-      { docId: "admin_kedungreja", defaultUser: "adminkedungreja", defaultPass: "admin00", cabang: "kedungreja", nama: "Admin Kedungreja" },
-      { docId: "admin_tehwarga", defaultUser: "admintehwarga", defaultPass: "admin00", cabang: "tehwarga", nama: "Admin Teh Warga" },
       { docId: "admin_gembong", defaultUser: "admingembong", defaultPass: "admin00", cabang: "gembong", nama: "Admin Gembong" },
-      { docId: "admin", defaultUser: "adminzona", defaultPass: "admin00", cabang: "gdm", nama: "Admin Zona Waktu" },
+      { docId: "admin", defaultUser: "admin", defaultPass: "admin00", cabang: "gembong", nama: "Admin Zona Waktu Gembong" },
     ];
 
     for (const adm of adminDocs) {
@@ -862,22 +855,9 @@ export async function syncAllAccountsToFirebaseAuth(
 
     // 5. Fallback scan for known credential documents
     const credDocsToScan = [
-      { docId: "absensi_logins_tehwarga", branch: "tehwarga" as BranchId },
-      { docId: "system_logins_tehwarga", branch: "tehwarga" as BranchId },
-      { docId: "logins_tehwarga", branch: "tehwarga" as BranchId },
-      { docId: "absensi_logins_teh_warga", branch: "tehwarga" as BranchId },
-      { docId: "system_logins_teh_warga", branch: "tehwarga" as BranchId },
-      { docId: "logins_teh_warga", branch: "tehwarga" as BranchId },
-      { docId: "absensi_logins_teh_warga_gdm", branch: "tehwarga" as BranchId },
-      { docId: "system_logins_teh_warga_gdm", branch: "tehwarga" as BranchId },
-      { docId: "logins_teh_warga_gdm", branch: "tehwarga" as BranchId },
-      { docId: "absensi_logins_kedungreja", branch: "kedungreja" as BranchId },
-      { docId: "system_logins_kedungreja", branch: "kedungreja" as BranchId },
-      { docId: "logins_kedungreja", branch: "kedungreja" as BranchId },
-      { docId: "absensi_logins_gdm", branch: "gdm" as BranchId },
-      { docId: "system_logins_gdm", branch: "gdm" as BranchId },
-      { docId: "logins_gdm", branch: "gdm" as BranchId },
-      { docId: "logins", branch: "gdm" as BranchId },
+      { docId: "absensi_logins_gembong", branch: "gembong" as BranchId },
+      { docId: "system_logins_gembong", branch: "gembong" as BranchId },
+      { docId: "logins_gembong", branch: "gembong" as BranchId },
     ];
 
     for (const credItem of credDocsToScan) {
@@ -991,12 +971,9 @@ export async function logoutWithFirebaseAuth(extraKeys?: string[]) {
     localStorage.removeItem("current_branch");
     localStorage.removeItem("employee_name");
     localStorage.removeItem("absensi_user");
-    localStorage.removeItem("absensi_user_gdm");
-    localStorage.removeItem("absensi_user_kedungreja");
-    localStorage.removeItem("absensi_user_tehwarga");
+    localStorage.removeItem("absensi_user_gembong");
     localStorage.removeItem("karyawan_user");
-    localStorage.removeItem("karyawan_user_kedungreja");
-    localStorage.removeItem("karyawan_user_tehwarga");
+    localStorage.removeItem("karyawan_user_gembong");
     if (extraKeys && Array.isArray(extraKeys)) {
       extraKeys.forEach(k => {
         try { localStorage.removeItem(k); } catch {}

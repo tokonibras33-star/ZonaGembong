@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyARQJvG1Lt8-NgrcGctWSso9kaHOxBDyNc",
-  authDomain: "sistempakyani.firebaseapp.com",
-  projectId: "sistempakyani",
-  storageBucket: "sistempakyani.firebasestorage.app",
-  messagingSenderId: "786197161585",
-  appId: "1:786197161585:web:114536cc8aa9496be49dd0",
+  apiKey: "AIzaSyCpG9Jf1Nh7HB9X1QB7jc7iFKsiA7iTbOo",
+  authDomain: "zonagombong-ef360.firebaseapp.com",
+  projectId: "zonagombong-ef360",
+  storageBucket: "zonagombong-ef360.firebasestorage.app",
+  messagingSenderId: "933059253193",
+  appId: "1:933059253193:web:f0d19452af57e3f2fe4e18",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -15,7 +15,7 @@ const db = getFirestore(app);
 
 async function scan() {
   console.log("=== SCANNING MASTER BAHAN BAKU ===");
-  
+
   const cols = [
     { name: "Zona Waktu GDM (bahan-baku)", id: "bahan-baku" },
     { name: "Teh Warga GDM (bahan-baku_tehwarga)", id: "bahan-baku_tehwarga" },
@@ -43,7 +43,7 @@ async function scan() {
           qtyKontainerKecil: d.qtyKontainerKecil || 0
         });
       });
-      items.sort((a,b) => (a.code || "").localeCompare(b.code || ""));
+      items.sort((a, b) => (a.code || "").localeCompare(b.code || ""));
       allData[c.id] = items;
       console.log(`\n======================================================`);
       console.log(`KOLEKSI: ${c.name} (Total: ${items.length} bahan)`);

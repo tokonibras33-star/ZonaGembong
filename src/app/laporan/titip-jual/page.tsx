@@ -171,7 +171,7 @@ export default function LaporanTitipJualPage() {
     (rawSales as RawSaleDoc[]).forEach((saleDoc) => {
       const saleDate = String(saleDoc.tanggal || "").split("T")[0];
       if (!saleDate) return;
-      const saleBranch = normalizeBranchId(saleDoc._branchId || saleDoc.branchId || "gdm");
+      const saleBranch = normalizeBranchId(saleDoc._branchId || saleDoc.branchId || "gembong");
 
       const items = saleDoc.items || [];
       items.forEach((it) => {
@@ -200,7 +200,7 @@ export default function LaporanTitipJualPage() {
     (rawTitipJual as TitipJualDoc[]).forEach((doc) => {
       const docDate = doc.tanggal;
       if (!docDate) return;
-      const docBranch = normalizeBranchId(doc.branchId || "gdm");
+      const docBranch = normalizeBranchId(doc.branchId || "gembong");
 
       (doc.items || []).forEach((it) => {
         const itCode = String(it.code || "").trim();
@@ -232,10 +232,7 @@ export default function LaporanTitipJualPage() {
     Object.keys(salesAggregate).forEach((k) => allKeys.add(k));
 
     // Also populate default products for selected date/month if filter is active
-    const targetBranches: BranchId[] = 
-      selectedBranchFilter === "all" 
-        ? ["gdm", "kedungreja", "tehwarga", "gembong"]
-        : [selectedBranchFilter as BranchId];
+    const targetBranches: BranchId[] = ["gembong"];
 
     if (filterMode === "daily") {
       targetBranches.forEach((b) => {
@@ -575,11 +572,7 @@ export default function LaporanTitipJualPage() {
                 onChange={(e) => setSelectedBranchFilter(e.target.value)}
                 className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
               >
-                <option value="all">Semua Toko Terpadu</option>
-                <option value="gdm">Zona GDM</option>
-                <option value="kedungreja">Kedungreja</option>
-                <option value="tehwarga">Teh Warga GDM</option>
-                <option value="gembong">Zona Gembong</option>
+                <option value="gembong">Zona Waktu Gembong</option>
               </select>
             </div>
           </div>

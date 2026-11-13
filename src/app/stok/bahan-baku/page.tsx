@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from "react";
 import { 
   Search, 
-  ArrowRightLeft, 
   Loader2, 
   Save, 
   FileDown, 
@@ -28,7 +27,6 @@ import {
   collection, 
   doc,
   useActiveBranch,
-  setActiveBranch,
   WarehouseId,
   BranchId,
   WAREHOUSE_LIST,
@@ -138,7 +136,7 @@ export default function StokBahanBakuPage() {
   const { data: warehouseMaterials, loading: loadingWarehouse } = useCollection(warehouseMaterialsQuery);
 
   const containerMaterialsQuery = useMemoFirebase(
-    () => query(collection(db, "bahan-baku"), orderBy("code", "asc")),
+    () => query(branchCollection(db, "bahan-baku"), orderBy("code", "asc")),
     [db, activeBranch]
   );
   const { data: containerMaterials, loading: loadingContainer } = useCollection(containerMaterialsQuery);
@@ -158,10 +156,10 @@ export default function StokBahanBakuPage() {
   // ==========================================
   const [isMigrationOpen, setIsMigrationOpen] = useState(false);
   const [migrationMode, setMigrationMode] = useState<MigrationMode>("gudang_ke_kontainer");
-  const [sourceWarehouse, setSourceWarehouse] = useState<WarehouseId>(() => getWarehouseForBranch(activeBranch));
-  const [targetWarehouse, setTargetWarehouse] = useState<WarehouseId>(() => (getWarehouseForBranch(activeBranch) === "gdm" ? "kedungreja" : "gdm"));
-  const [sourceBranch, setSourceBranch] = useState<BranchId>(activeBranch);
-  const [targetBranch, setTargetBranch] = useState<BranchId>(() => (activeBranch === "gdm" ? "tehwarga" : "gdm"));
+  const [sourceWarehouse, _setSourceWarehouse] = useState<WarehouseId>(() => getWarehouseForBranch(activeBranch));
+  const [targetWarehouse, _setTargetWarehouse] = useState<WarehouseId>(() => (getWarehouseForBranch(activeBranch) === "gdm" ? "kedungreja" : "gdm"));
+  const [sourceBranch, _setSourceBranch] = useState<BranchId>(activeBranch);
+  const [targetBranch, _setTargetBranch] = useState<BranchId>(() => (activeBranch === "gdm" ? "tehwarga" : "gdm"));
   const [nomorBukti, setNomorBukti] = useState<string>("");
   const [migrationCatatan, setMigrationCatatan] = useState<string>("");
   const [migrationItems, setMigrationItems] = useState<MigrationItemRow[]>([
@@ -970,17 +968,17 @@ export default function StokBahanBakuPage() {
           </DialogHeader>
 
           <form onSubmit={handleExecuteMigration} className="space-y-6 mt-3">
-            {/* 1. Pemilihan Mode Perpindahan (4 Mode) */}
+            {/* 1. Pemilihan Mode Perpindahan (Gudang <-> Kontainer Gembong) */}
             <div className="space-y-2">
               <Label className="text-[11px] font-black uppercase tracking-wider text-slate-500">
                 1. Pilih Jenis & Arah Pemindahan
               </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => setMigrationMode("gudang_ke_kontainer")}
                   className={cn(
-                    "p-3 rounded-2xl border text-left transition-all flex flex-col gap-1.5",
+                    "p-3.5 rounded-2xl border text-left transition-all flex flex-col gap-1.5",
                     migrationMode === "gudang_ke_kontainer"
                       ? "bg-indigo-50/80 border-indigo-500 shadow-sm ring-2 ring-indigo-500/20"
                       : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/80"
@@ -992,14 +990,14 @@ export default function StokBahanBakuPage() {
                     <Store className={cn("h-4 w-4", migrationMode === "gudang_ke_kontainer" ? "text-indigo-600" : "text-slate-500")} />
                   </div>
                   <span className="text-[11px] font-black leading-tight text-slate-900">Gudang ➔ Kontainer</span>
-                  <span className="text-[9px] font-bold text-slate-500">Ambil untuk Toko</span>
+                  <span className="text-[9px] font-bold text-slate-500">Ambil untuk Toko Gembong</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setMigrationMode("kontainer_ke_gudang")}
                   className={cn(
-                    "p-3 rounded-2xl border text-left transition-all flex flex-col gap-1.5",
+                    "p-3.5 rounded-2xl border text-left transition-all flex flex-col gap-1.5",
                     migrationMode === "kontainer_ke_gudang"
                       ? "bg-emerald-50/80 border-emerald-500 shadow-sm ring-2 ring-emerald-500/20"
                       : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/80"
@@ -1011,143 +1009,34 @@ export default function StokBahanBakuPage() {
                     <Building2 className={cn("h-4 w-4", migrationMode === "kontainer_ke_gudang" ? "text-emerald-600" : "text-slate-500")} />
                   </div>
                   <span className="text-[11px] font-black leading-tight text-slate-900">Kontainer ➔ Gudang</span>
-                  <span className="text-[9px] font-bold text-slate-500">Retur Sisa ke Gudang</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setMigrationMode("antar_gudang")}
-                  className={cn(
-                    "p-3 rounded-2xl border text-left transition-all flex flex-col gap-1.5",
-                    migrationMode === "antar_gudang"
-                      ? "bg-amber-50/80 border-amber-500 shadow-sm ring-2 ring-amber-500/20"
-                      : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/80"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <Building2 className={cn("h-4 w-4", migrationMode === "antar_gudang" ? "text-amber-600" : "text-slate-500")} />
-                    <ArrowRightLeft className="h-3 w-3 text-slate-400" />
-                    <Building2 className={cn("h-4 w-4", migrationMode === "antar_gudang" ? "text-amber-600" : "text-slate-500")} />
-                  </div>
-                  <span className="text-[11px] font-black leading-tight text-slate-900">Antar Gudang</span>
-                  <span className="text-[9px] font-bold text-slate-500">GDM ⟷ Kedungreja</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setMigrationMode("antar_kontainer")}
-                  className={cn(
-                    "p-3 rounded-2xl border text-left transition-all flex flex-col gap-1.5",
-                    migrationMode === "antar_kontainer"
-                      ? "bg-purple-50/80 border-purple-500 shadow-sm ring-2 ring-purple-500/20"
-                      : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/80"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <Store className={cn("h-4 w-4", migrationMode === "antar_kontainer" ? "text-purple-600" : "text-slate-500")} />
-                    <ArrowRightLeft className="h-3 w-3 text-slate-400" />
-                    <Store className={cn("h-4 w-4", migrationMode === "antar_kontainer" ? "text-purple-600" : "text-slate-500")} />
-                  </div>
-                  <span className="text-[11px] font-black leading-tight text-slate-900">Antar Kontainer</span>
-                  <span className="text-[9px] font-bold text-slate-500">Mutasi Antar Toko</span>
+                  <span className="text-[9px] font-bold text-slate-500">Retur Sisa ke Gudang Gembong</span>
                 </button>
               </div>
             </div>
 
-            {/* 2. Pemilihan Lokasi Asal & Tujuan */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 border border-slate-100 rounded-3xl">
-              {/* Asal Lokasi */}
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-                  Lokasi Asal (Stok Berkurang)
-                </Label>
-                {migrationMode === "gudang_ke_kontainer" || migrationMode === "antar_gudang" ? (
-                  <Select 
-                    value={sourceWarehouse} 
-                    onValueChange={(v: WarehouseId) => {
-                      setSourceWarehouse(v);
-                      if (migrationMode === "antar_gudang") {
-                        setTargetWarehouse(v === "gdm" ? "kedungreja" : "gdm");
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-10 rounded-2xl bg-white border-slate-200 font-bold text-xs">
-                      <SelectValue placeholder="Pilih Gudang Asal" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl font-bold">
-                      <SelectItem value="gdm">Gudang Gandrungmangu (GDM)</SelectItem>
-                      <SelectItem value="kedungreja">Gudang Kedungreja</SelectItem>
-                      <SelectItem value="gembong">Gudang Gembong (Mandiri)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Select 
-                    value={sourceBranch} 
-                    onValueChange={(v: BranchId) => {
-                      setSourceBranch(v);
-                      if (migrationMode === "antar_kontainer" && targetBranch === v) {
-                        setTargetBranch(v === "gdm" ? "tehwarga" : "gdm");
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-10 rounded-2xl bg-white border-slate-200 font-bold text-xs">
-                      <SelectValue placeholder="Pilih Kontainer Asal" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl font-bold">
-                      <SelectItem value="gdm">Zona Waktu - Gandrungmangu</SelectItem>
-                      <SelectItem value="tehwarga">Teh Warga - Gandrungmangu</SelectItem>
-                      <SelectItem value="kedungreja">Zona Waktu - Kedungreja</SelectItem>
-                      <SelectItem value="gembong">Zona Waktu - Gembong</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+            {/* 2. Informasi Lokasi Asal & Tujuan (Otomatis Gembong) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 border border-slate-100 rounded-3xl">
+              <div className="p-3 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-3">
+                <span className="h-2.5 w-2.5 rounded-full bg-rose-500 shrink-0" />
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                    Lokasi Asal (Stok Berkurang)
+                  </span>
+                  <span className="text-xs font-black text-slate-900 uppercase">
+                    {migrationMode === "gudang_ke_kontainer" ? "Gudang Utama" : "Area Kontainer Toko"}
+                  </span>
+                </div>
               </div>
-
-              {/* Tujuan Lokasi */}
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                  Lokasi Tujuan (Stok Bertambah)
-                </Label>
-                {migrationMode === "kontainer_ke_gudang" || migrationMode === "antar_gudang" ? (
-                  <Select 
-                    value={targetWarehouse} 
-                    onValueChange={(v: WarehouseId) => setTargetWarehouse(v)}
-                  >
-                    <SelectTrigger className="h-10 rounded-2xl bg-white border-slate-200 font-bold text-xs">
-                      <SelectValue placeholder="Pilih Gudang Tujuan" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl font-bold">
-                      <SelectItem value="gdm">Gudang Gandrungmangu (GDM)</SelectItem>
-                      <SelectItem value="kedungreja">Gudang Kedungreja</SelectItem>
-                      <SelectItem value="gembong">Gudang Gembong (Mandiri)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Select 
-                    value={targetBranch} 
-                    onValueChange={(v: BranchId) => setTargetBranch(v)}
-                  >
-                    <SelectTrigger className="h-10 rounded-2xl bg-white border-slate-200 font-bold text-xs">
-                      <SelectValue placeholder="Pilih Kontainer Tujuan" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl font-bold">
-                      <SelectItem value="gdm" disabled={migrationMode === "antar_kontainer" && sourceBranch === "gdm"}>
-                        Zona Waktu - Gandrungmangu
-                      </SelectItem>
-                      <SelectItem value="tehwarga" disabled={migrationMode === "antar_kontainer" && sourceBranch === "tehwarga"}>
-                        Teh Warga - Gandrungmangu
-                      </SelectItem>
-                      <SelectItem value="kedungreja" disabled={migrationMode === "antar_kontainer" && sourceBranch === "kedungreja"}>
-                        Zona Waktu - Kedungreja
-                      </SelectItem>
-                      <SelectItem value="gembong" disabled={migrationMode === "antar_kontainer" && sourceBranch === "gembong"}>
-                        Zona Waktu - Gembong
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+              <div className="p-3 rounded-2xl bg-white border border-slate-200/80 flex items-center gap-3">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shrink-0" />
+                <div>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block">
+                    Lokasi Tujuan (Stok Bertambah)
+                  </span>
+                  <span className="text-xs font-black text-slate-900 uppercase">
+                    {migrationMode === "gudang_ke_kontainer" ? "Area Kontainer Toko" : "Gudang Utama"}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1403,8 +1292,8 @@ export default function StokBahanBakuPage() {
 
       {/* Main Tabs: Kontainer vs Gudang */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "kontainer" | "gudang")} className="w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-100/80 p-1.5 rounded-2xl">
-          <TabsList className="bg-transparent h-10 p-0 gap-1">
+        <div className="flex items-center bg-slate-100/80 p-1.5 rounded-2xl w-full sm:w-fit">
+          <TabsList className="bg-transparent h-10 p-0 gap-1 w-full sm:w-auto grid grid-cols-2 sm:flex">
             <TabsTrigger 
               value="kontainer" 
               className="rounded-xl px-4 font-black uppercase tracking-wider text-[10px] sm:text-xs h-9 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
@@ -1420,85 +1309,6 @@ export default function StokBahanBakuPage() {
               <span>Gudang Utama</span>
             </TabsTrigger>
           </TabsList>
-
-          {/* Sub Switcher */}
-          {activeTab === "gudang" ? (
-            <div className="flex items-center gap-1 bg-white p-1 rounded-xl shadow-xs border border-slate-200/60">
-              <button
-                type="button"
-                onClick={() => setSelectedWarehouse("gdm")}
-                className={cn(
-                  "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedWarehouse === "gdm" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                Gudang GDM (Terpadu)
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedWarehouse("kedungreja")}
-                className={cn(
-                  "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedWarehouse === "kedungreja" ? "bg-slate-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                Gudang Kedungreja
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedWarehouse("gembong")}
-                className={cn(
-                  "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  selectedWarehouse === "gembong" ? "bg-indigo-900 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                Gudang Gembong (Mandiri)
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 bg-white p-1 rounded-xl shadow-xs border border-slate-200/60">
-              <button
-                type="button"
-                onClick={() => setActiveBranch("gdm")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  activeBranch === "gdm" ? "bg-emerald-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                ZW GDM
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveBranch("tehwarga")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  activeBranch === "tehwarga" ? "bg-amber-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                Teh Warga GDM
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveBranch("kedungreja")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  activeBranch === "kedungreja" ? "bg-cyan-600 text-white shadow-xs" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                ZW Kedungreja
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveBranch("gembong")}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all",
-                  activeBranch === "gembong" ? "bg-indigo-600 text-white shadow-xs shadow-indigo-600/30" : "text-slate-600 hover:text-slate-900"
-                )}
-              >
-                ZW Gembong
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Search & Filter Bar */}

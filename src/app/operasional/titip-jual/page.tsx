@@ -317,7 +317,7 @@ export default function OperasionalTitipJualPage() {
     const salesAggregate: Record<string, number> = {};
     const allKeys = new Set<string>();
 
-    const targetBranches: BranchId[] = ["gdm", "kedungreja", "tehwarga", "gembong"];
+    const targetBranches: BranchId[] = ["gembong"];
 
     // Populate titip-jual
     if (rawTitipJual && Array.isArray(rawTitipJual)) {
@@ -561,7 +561,7 @@ export default function OperasionalTitipJualPage() {
 
     setSaving(true);
     try {
-      const targetBranch = selectedBranch === "all" ? "gdm" : selectedBranch;
+      const targetBranch = selectedBranch === "all" ? "gembong" : selectedBranch;
       await addDoc(collection(db, "titip-jual"), {
         tanggal: selectedDate,
         branchId: targetBranch,
@@ -630,7 +630,7 @@ export default function OperasionalTitipJualPage() {
 
     setSaving(true);
     try {
-      const targetBranch = selectedBranch === "all" ? "gdm" : selectedBranch;
+      const targetBranch = selectedBranch === "all" ? "gembong" : selectedBranch;
       await addDoc(collection(db, "titip-jual"), {
         tanggal: selectedDate,
         branchId: targetBranch,
@@ -821,10 +821,6 @@ export default function OperasionalTitipJualPage() {
               onChange={(e) => setSelectedBranch(e.target.value)}
               className="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer"
             >
-              <option value="all" className="text-slate-900 font-semibold">Semua Outlet (Konsolidasi)</option>
-              <option value="gdm" className="text-slate-900 font-semibold">Zona Waktu GDM</option>
-              <option value="kedungreja" className="text-slate-900 font-semibold">Zona Waktu Kedungreja</option>
-              <option value="tehwarga" className="text-slate-900 font-semibold">Zona Waktu Teh Warga</option>
               <option value="gembong" className="text-slate-900 font-semibold">Zona Waktu Gembong</option>
             </select>
           </div>
@@ -1143,9 +1139,6 @@ export default function OperasionalTitipJualPage() {
                   onChange={(e) => setSelectedBranch(e.target.value)}
                   className="mt-1.5 w-full bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 p-2.5 rounded-xl focus:outline-none"
                 >
-                  <option value="gdm">Zona Waktu GDM</option>
-                  <option value="kedungreja">Zona Waktu Kedungreja</option>
-                  <option value="tehwarga">Zona Waktu Teh Warga</option>
                   <option value="gembong">Zona Waktu Gembong</option>
                 </select>
               </div>

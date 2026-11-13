@@ -41,7 +41,7 @@ export default function DashboardPage() {
   const db = useFirestore();
   const mounted = true; // client component — always mounted
   const activeBranch = useActiveBranch();
-  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gdm;
+  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gembong;
   const theme = getBranchTheme(activeBranch);
   const isGembong = activeBranch === 'gembong';
 
@@ -376,7 +376,7 @@ export default function DashboardPage() {
   }, [penjualanData]);
 
   const bestSellersChartData = useMemo(() => {
-    const colors = ["#8b1a1a", "#4f46e5", "#f59e0b", "#10b981", "#ec4899"];
+    const colors = ["#6b3c16", "#c48945", "#a36324", "#10b981", "#d97706"];
     return bestSellers.map((item, idx) => ({
       name: item.name,
       value: item.qty,
@@ -399,13 +399,13 @@ export default function DashboardPage() {
       <div className={cn(
         "rounded-2xl md:rounded-[2rem] p-5 md:p-7 relative overflow-hidden transition-all duration-500 shadow-lg border",
         isGembong
-          ? "bg-gradient-to-br from-[#070d19] via-[#0f172a] to-[#1e1b4b] border-indigo-500/30 text-white shadow-indigo-950/20"
+          ? "bg-gradient-to-br from-[#160c06] via-[#26150b] to-[#3b2212] border-[#e6b88a]/30 text-[#f8f2e8] shadow-[#160c06]/30"
           : "bg-white border-slate-100 text-slate-900 shadow-slate-200/50"
       )}>
         {/* Ambient glow decoration */}
         <div className={cn(
           "absolute -right-16 -top-16 w-56 h-56 rounded-full blur-3xl pointer-events-none opacity-40",
-          isGembong ? "bg-indigo-500/40" : "bg-emerald-500/20"
+          isGembong ? "bg-[#e6b88a]/30" : "bg-emerald-500/20"
         )} />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -414,25 +414,25 @@ export default function DashboardPage() {
               <span className={cn(
                 "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border",
                 isGembong
-                  ? "bg-indigo-950/80 border-indigo-400/40 text-indigo-300"
+                  ? "bg-[#120a05]/80 border-[#e6b88a]/40 text-[#e6b88a]"
                   : theme.badgeClass
               )}>
                 <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", theme.dotColor)} />
                 {branchInfo.code} • {branchInfo.name}
               </span>
-              <span className={cn("text-[9px] font-black uppercase tracking-wider", isGembong ? "text-indigo-300/80" : "text-slate-400")}>
+              <span className={cn("text-[9px] font-black uppercase tracking-wider", isGembong ? "text-[#e6b88a]/80" : "text-slate-400")}>
                 Outlet Aktif
               </span>
             </div>
             <h1 className={cn(
               "text-2xl md:text-3xl font-black tracking-tight uppercase italic leading-none",
-              isGembong ? "text-white" : "text-slate-900"
+              isGembong ? "text-[#f8f2e8]" : "text-slate-900"
             )}>
               Dashboard Utama
             </h1>
             <p className={cn(
               "text-[10px] md:text-xs font-bold uppercase tracking-wider mt-1",
-              isGembong ? "text-slate-300" : "text-slate-500"
+              isGembong ? "text-[#d6c3a9]" : "text-slate-500"
             )}>
               Ringkasan operasional, performa omset & stok {branchInfo.name}
             </p>
@@ -440,10 +440,10 @@ export default function DashboardPage() {
           
           <Link href="/penjualan/kasir" className="w-full md:w-auto">
             <Button className={cn(
-              "w-full md:w-auto rounded-xl md:rounded-2xl px-6 md:px-8 font-black shadow-xl h-12 uppercase tracking-widest text-[10px] text-white transition-all hover:scale-[1.02] active:scale-95",
+              "w-full md:w-auto rounded-xl md:rounded-2xl px-6 md:px-8 font-black shadow-xl h-12 uppercase tracking-widest text-[10px] transition-all hover:scale-[1.02] active:scale-95",
               isGembong
-                ? "bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 shadow-indigo-600/30"
-                : `${theme.buttonGradient} shadow-primary/20`
+                ? "bg-gradient-to-r from-[#e6b88a] to-[#c48945] hover:from-[#f0c89c] hover:to-[#d49752] text-[#160c06] shadow-[#e6b88a]/20"
+                : `${theme.buttonGradient} text-white shadow-primary/20`
             )}>
               Input Closing Harian
             </Button>
@@ -490,10 +490,10 @@ export default function DashboardPage() {
               </div>
               <p className="text-[8px] md:text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
             </div>
-            <div className="flex flex-col gap-1.5 md:flex-row md:items-end md:justify-between mt-auto">
-              <h3 className="text-xs sm:text-lg md:text-2xl font-black text-slate-900 tracking-tight truncate max-w-full">{stat.value}</h3>
-              <span className={cn("text-[7px] md:text-[9px] font-black px-1.5 py-0.5 md:py-1 rounded-md shrink-0 w-fit", 
-                stat.color.includes("emerald") || stat.change === 'Sehat' ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500")}>
+            <div className="flex flex-col gap-1.5 xl:flex-row xl:items-end xl:justify-between mt-auto">
+              <h3 className="text-sm sm:text-lg xl:text-2xl font-black text-slate-900 tracking-tight leading-tight">{stat.value}</h3>
+              <span className={cn("text-[7px] md:text-[9px] font-black px-2 py-0.5 md:py-1 rounded-md shrink-0 w-fit", 
+                stat.color.includes("emerald") || stat.change === 'Sehat' ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600")}>
                 {stat.change}
               </span>
             </div>
@@ -516,34 +516,34 @@ export default function DashboardPage() {
           <div className="h-[250px] md:h-[300px] w-full mt-6">
             {mounted ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 4, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={isGembong ? "#4f46e5" : theme.chartBarColor} stopOpacity={0.25}/>
-                      <stop offset="95%" stopColor={isGembong ? "#4f46e5" : theme.chartBarColor} stopOpacity={0}/>
+                      <stop offset="5%" stopColor={isGembong ? "#6b3c16" : theme.chartBarColor} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={isGembong ? "#6b3c16" : theme.chartBarColor} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#efe5d5" vertical={false} />
                   <XAxis 
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} 
+                    tick={{ fill: '#785c42', fontSize: 10, fontWeight: 700 }} 
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
                     tickFormatter={(tick) => `Rp ${(tick / 1000).toLocaleString('id-ID')}k`}
-                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} 
+                    tick={{ fill: '#785c42', fontSize: 10, fontWeight: 700 }} 
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ borderRadius: '1rem', border: '1px solid #e2d2bc', backgroundColor: '#fdfaf5', boxShadow: '0 25px 50px -12px rgba(24,14,7,0.12)' }}
                     formatter={(value) => [`Rp ${Number(value).toLocaleString('id-ID')}`, 'Omset']}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="value" 
-                    stroke={isGembong ? "#4f46e5" : theme.chartBarColor} 
+                    stroke={isGembong ? "#6b3c16" : theme.chartBarColor} 
                     strokeWidth={3} 
                     fillOpacity={1} 
                     fill="url(#colorSales)" 
@@ -624,29 +624,29 @@ export default function DashboardPage() {
           <div className="h-[250px] md:h-[300px] w-full mt-6">
             {mounted ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyFinancialChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <BarChart data={dailyFinancialChartData} margin={{ top: 10, right: 10, left: 4, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#efe5d5" vertical={false} />
                   <XAxis 
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} 
+                    tick={{ fill: '#785c42', fontSize: 10, fontWeight: 700 }} 
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
                     tickFormatter={(tick) => `Rp ${(tick / 1000).toLocaleString('id-ID')}k`}
-                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} 
+                    tick={{ fill: '#785c42', fontSize: 10, fontWeight: 700 }} 
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ borderRadius: '1rem', border: '1px solid #e2d2bc', backgroundColor: '#fdfaf5', boxShadow: '0 25px 50px -12px rgba(24,14,7,0.12)' }}
                     formatter={(value, name) => [
                       `Rp ${Number(value).toLocaleString('id-ID')}`, 
                       name === 'profit' ? 'Laba Bersih' : 'Beban (HPP + Ops)'
                     ]}
                   />
                   <Bar dataKey="profit" name="profit" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="beban" name="beban" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="beban" name="beban" fill="#c48945" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -668,34 +668,34 @@ export default function DashboardPage() {
           <div className="h-[250px] md:h-[300px] w-full mt-6">
             {mounted ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={dailyFinancialChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={dailyFinancialChartData} margin={{ top: 10, right: 10, left: 4, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorHpp" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#8b4d20" stopOpacity={0.28}/>
+                      <stop offset="95%" stopColor="#8b4d20" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#efe5d5" vertical={false} />
                   <XAxis 
                     dataKey="name" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} 
+                    tick={{ fill: '#785c42', fontSize: 10, fontWeight: 700 }} 
                   />
                   <YAxis 
                     axisLine={false} 
                     tickLine={false} 
                     tickFormatter={(tick) => `Rp ${(tick / 1000).toLocaleString('id-ID')}k`}
-                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} 
+                    tick={{ fill: '#785c42', fontSize: 10, fontWeight: 700 }} 
                   />
                   <Tooltip 
-                    contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ borderRadius: '1rem', border: '1px solid #e2d2bc', backgroundColor: '#fdfaf5', boxShadow: '0 25px 50px -12px rgba(24,14,7,0.12)' }}
                     formatter={(value) => [`Rp ${Number(value).toLocaleString('id-ID')}`, 'HPP']}
                   />
                   <Area 
                     type="monotone" 
                     dataKey="hpp" 
-                    stroke="#6366f1" 
+                    stroke="#8b4d20" 
                     strokeWidth={3} 
                     fillOpacity={1} 
                     fill="url(#colorHpp)" 

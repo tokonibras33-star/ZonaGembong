@@ -415,7 +415,7 @@ export default function PengaturanAbsensiPage() {
     if (log.cabang) {
       return normalizeBranchId(log.cabang);
     }
-    return "gdm";
+    return "gembong";
   }, [karyawanMap]);
 
   const filteredKaryawanList = useMemo(() => {
@@ -651,12 +651,8 @@ export default function PengaturanAbsensiPage() {
   // Load Initial Config based on branch
   useEffect(() => {
     const loadConfig = async () => {
-      const branchKey = selectedBranch === "all" ? "gdm" : selectedBranch;
-      const configDocName = 
-        branchKey === "gembong" ? "absensi_config_gembong" :
-        branchKey === "tehwarga" ? "absensi_config_tehwarga" :
-        branchKey === "kedungreja" ? "absensi_config_kedungreja" :
-        "absensi_config";
+      const branchKey = "gembong";
+      const configDocName = "absensi_config_gembong";
 
       try {
         const docRef = doc(db, "settings", configDocName);
@@ -715,27 +711,15 @@ export default function PengaturanAbsensiPage() {
   }, [db, selectedBranch]);
 
   const handleSaveConfig = async (type: string) => {
-    const branchKey = selectedBranch === "all" ? "gdm" : selectedBranch;
-    const configDocName = 
-      branchKey === "gembong" ? "absensi_config_gembong" :
-      branchKey === "tehwarga" ? "absensi_config_tehwarga" :
-      branchKey === "kedungreja" ? "absensi_config_kedungreja" :
-      "absensi_config";
-
-    const branchLabel = 
-      branchKey === "gembong" ? "Zona Gembong (ZW-03)" :
-      branchKey === "tehwarga" ? "Teh Warga GDM (TW-01)" :
-      branchKey === "kedungreja" ? "Zona Kedungreja (ZW-02)" :
-      "Zona Waktu GDM (ZW-01)";
+    const branchKey = "gembong";
+    const configDocName = "absensi_config_gembong";
+    const branchLabel = "Zona Waktu Gembong";
 
     const configRef = doc(db, "settings", configDocName);
     try {
       if (type === 'jam-kerja') {
         await setDoc(configRef, { shifts, updatedAt: serverTimestamp() }, { merge: true });
         setAllBranchShifts(prev => ({ ...prev, [branchKey]: shifts }));
-        if (branchKey === "gdm") {
-          await setDoc(doc(db, "settings", "absensi_config_gdm"), { shifts, updatedAt: serverTimestamp() }, { merge: true });
-        }
       } else if (type === 'lokasi') {
         // Simpan titik koordinat KHUSUS HANYA untuk toko yang dipilih
         const locationData = {
@@ -746,14 +730,8 @@ export default function PengaturanAbsensiPage() {
           updatedAt: serverTimestamp()
         };
         await setDoc(configRef, locationData, { merge: true });
-        if (branchKey === "gdm") {
-          await setDoc(doc(db, "settings", "absensi_config_gdm"), locationData, { merge: true });
-        }
       } else if (type === 'cloudinary') {
         await setDoc(configRef, { cloudinaryConfig, updatedAt: serverTimestamp() }, { merge: true });
-        if (branchKey === "gdm") {
-          await setDoc(doc(db, "settings", "absensi_config_gdm"), { cloudinaryConfig, updatedAt: serverTimestamp() }, { merge: true });
-        }
       }
       alert(`Konfigurasi untuk ${branchLabel} berhasil disimpan!`);
     } catch (e) {
@@ -770,23 +748,22 @@ export default function PengaturanAbsensiPage() {
   const [formGender, setFormGender] = useState("Laki-laki");
   const [prevBranch, setPrevBranch] = useState<BranchId>(selectedBranch);
   const [formCabang, setFormCabang] = useState<"gdm" | "kedungreja" | "tehwarga" | "gembong">(
-    (selectedBranch === "all" ? "gdm" : selectedBranch) as "gdm" | "kedungreja" | "tehwarga" | "gembong"
+    (selectedBranch === "all" ? "gembong" : selectedBranch) as "gdm" | "kedungreja" | "tehwarga" | "gembong"
   );
 
   // Otomatis sinkronkan cabang input karyawan baru saat toko aktif di header switcher berubah
   if (prevBranch !== selectedBranch) {
     setPrevBranch(selectedBranch);
     if (!editingKaryawan) {
-      const active = selectedBranch === "all" ? "gdm" : selectedBranch;
+      const active = selectedBranch === "all" ? "gembong" : selectedBranch;
       setFormCabang(active as "gdm" | "kedungreja" | "tehwarga" | "gembong");
     }
   }
 
-  // Helper untuk sinkronisasi kredensial ke Firestore untuk SEMUA TOKO (GDM, Kedungreja, Teh Warga)
-  // Menjamin seluruh cabang tersinkronisasi bersamaan tanpa saling menghapus kasir/absensi
+  // Helper untuk sinkronisasi kredensial ke Firestore untuk Zona Gembong
   const syncCredentialsToFirestore = async (firestoreDb: Firestore) => {
     const snapshot = await getDocs(collection(firestoreDb, "karyawan"));
-    const allBranches: ("gdm" | "kedungreja" | "tehwarga" | "gembong")[] = ["gdm", "kedungreja", "tehwarga", "gembong"];
+    const allBranches: ("gdm" | "kedungreja" | "tehwarga" | "gembong")[] = ["gembong"];
     let totalAll = 0;
 
     for (const b of allBranches) {
@@ -843,13 +820,12 @@ export default function PengaturanAbsensiPage() {
         updatedAt: serverTimestamp()
       }, { merge: true });
 
-      if (b === "gdm") {
-        await setDoc(doc(firestoreDb, "employee_credentials", "logins"), {
-          users: combinedUsers,
-          totalUsers: combinedUsers.length,
-          updatedAt: serverTimestamp()
-        }, { merge: true });
-      }
+      // Sinkronisasi juga ke logins umum
+      await setDoc(doc(firestoreDb, "employee_credentials", "logins"), {
+        users: combinedUsers,
+        totalUsers: combinedUsers.length,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
     }
 
     // Sinkronisasi info ke absensi_config

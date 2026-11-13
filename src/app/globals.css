@@ -4,94 +4,62 @@
 
 @layer base {
   :root {
-    --background: 240 20% 98%;
-    --foreground: 224 71% 4%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    
-    --primary: 0 72% 35%; /* Merah Marun ZONA WAKTU */
-    --primary-foreground: 210 20% 98%;
-    
-    --secondary: 240 10% 93%;
-    --secondary-foreground: 222 47% 11%;
-    
-    --muted: 240 10% 96%;
-    --muted-foreground: 215 16% 47%;
-    
-    --accent: 0 72% 96%;
-    --accent-foreground: 222 47% 11%;
-    
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 20% 98%;
-    
-    --border: 240 10% 90%;
-    --input: 240 10% 90%;
-    --ring: 0 72% 35%;
-    
-    --radius: 2.5rem;
+    /* Warm Cream / Light Latte Background & Dark Espresso Foreground */
+    --background: 34 38% 91%;
+    --foreground: 24 50% 8%;
 
-    --theme-primary: #8b1a1a;
-    --theme-primary-foreground: #fffdf7;
-    --theme-background: #f5f5f7;
-    --theme-surface: #ffffff;
-    --theme-text: #0f172a;
-    --theme-muted: #64748b;
+    /* Warm Ivory Card Surface */
+    --card: 36 50% 98%;
+    --card-foreground: 24 50% 8%;
+
+    --popover: 36 50% 98%;
+    --popover-foreground: 24 50% 8%;
+
+    /* Rich Espresso Brown Primary (#6b3c16) */
+    --primary: 27 66% 25%;
+    --primary-foreground: 36 50% 98%;
+
+    /* Warm Biscuit / Light Caramel Secondary */
+    --secondary: 34 33% 86%;
+    --secondary-foreground: 24 48% 11%;
+
+    --muted: 34 32% 89%;
+    --muted-foreground: 26 28% 36%;
+
+    --accent: 35 55% 90%;
+    --accent-foreground: 25 65% 20%;
+
+    --destructive: 0 76% 52%;
+    --destructive-foreground: 36 50% 98%;
+
+    --border: 33 30% 81%;
+    --input: 33 30% 81%;
+    --ring: 27 66% 25%;
+
+    --radius: 2.25rem;
+
+    --theme-primary: #6b3c16;
+    --theme-primary-foreground: #fdfaf5;
+    --theme-background: #f2e9dc;
+    --theme-surface: #fdfaf5;
+    --theme-text: #1e120a;
+    --theme-muted: #785c42;
+    --theme-accent-gold: #e6b88a;
+    --theme-dark-choco: #1a0f08;
   }
 
-  /* Kusus Tema Toko 1 - Zona Waktu Cabang Gandrungmangu (Merah Marun) */
-  html[data-branch="gdm"],
-  body.theme-gdm,
-  [data-branch="gdm"] {
-    --primary: 0 72% 35%; /* Merah Marun */
-    --primary-foreground: 210 20% 98%;
-    --ring: 0 72% 35%;
-    --accent: 0 72% 96%;
-    --accent-foreground: 222 47% 11%;
-    --theme-primary: #8b1a1a;
-    --theme-primary-foreground: #fffdf7;
-  }
-
-  /* Kusus Tema Toko 2 - Zona Waktu Cabang Kedungreja (Dominasi Biru Tua / Deep Navy Blue) */
-  html[data-branch="kedungreja"],
-  body.theme-kedungreja,
-  [data-branch="kedungreja"] {
-    --primary: 221 83% 36%; /* Deep Navy Blue */
-    --primary-foreground: 210 100% 98%;
-    --ring: 221 83% 36%;
-    --accent: 214 95% 93%;
-    --accent-foreground: 224 71% 15%;
-    --theme-primary: #0f224a; /* Biru Tua Navy */
-    --theme-primary-foreground: #f0f9ff;
-  }
-
-  /* Kusus Tema Toko 3 - Teh Warga Gandrungmangu (Dominasi Hijau Segar) */
-  html[data-branch="tehwarga"],
-  body.theme-tehwarga,
-  [data-branch="tehwarga"] {
-    --primary: 158 64% 32%; /* Emerald Green */
-    --primary-foreground: 150 100% 98%;
-    --ring: 158 64% 32%;
-    --accent: 152 60% 94%;
-    --accent-foreground: 158 64% 20%;
-    --theme-primary: #065f46;
-    --theme-primary-foreground: #ecfdf5;
-  }
-
-  /* Khusus Tema Toko 4 - Zona Waktu Cabang Gembong (Dominasi Sapphire Indigo / Deep Indigo) */
+  /* Tema Utama - Zona Waktu Cabang Gembong (Warm Cream & Dark Chocolate) */
+  html,
   html[data-branch="gembong"],
   body.theme-gembong,
   [data-branch="gembong"] {
-    --primary: 243 75% 59%; /* Indigo 600 #4f46e5 */
-    --primary-foreground: 210 100% 98%;
-    --ring: 243 75% 59%;
-    --accent: 238 100% 96%;
-    --accent-foreground: 243 75% 25%;
-    --theme-primary: #4f46e5;
-    --theme-primary-foreground: #ffffff;
+    --primary: 27 66% 25%;
+    --primary-foreground: 36 50% 98%;
+    --ring: 27 66% 25%;
+    --accent: 35 55% 90%;
+    --accent-foreground: 25 65% 20%;
+    --theme-primary: #6b3c16;
+    --theme-primary-foreground: #fdfaf5;
   }
 }
 
@@ -99,47 +67,50 @@
   * {
     @apply border-border;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20;
     background-color: var(--theme-background);
+    background-image: radial-gradient(ellipse at 50% 0%, #f8f2e8 0%, #f2e9dc 55%, #eadcc9 100%);
     color: var(--theme-text);
   }
 
-  ::selection {
-    background-color: rgba(139, 26, 26, 0.2);
-    color: #111827;
+  /* Soften pure white cards inside the app shell into Warm Ivory Cream */
+  .zw-app-shell .bg-white {
+    background-color: #fdfaf5;
+  }
+  .zw-app-shell .bg-white\/95 {
+    background-color: rgba(253, 250, 245, 0.95);
+  }
+  .zw-app-shell .bg-white\/90 {
+    background-color: rgba(253, 250, 245, 0.9);
+  }
+  .zw-app-shell .bg-white\/80 {
+    background-color: rgba(253, 250, 245, 0.82);
   }
 
-  html[data-branch="kedungreja"] ::selection,
-  [data-branch="kedungreja"] ::selection {
-    background-color: rgba(15, 34, 74, 0.25);
-    color: #0f172a;
-  }
-
-  html[data-branch="tehwarga"] ::selection,
-  [data-branch="tehwarga"] ::selection {
-    background-color: rgba(6, 95, 70, 0.25);
-    color: #064e3b;
-  }
-
+  ::selection,
   html[data-branch="gembong"] ::selection,
   [data-branch="gembong"] ::selection {
-    background-color: rgba(79, 70, 229, 0.25);
-    color: #1e1b4b;
+    background-color: rgba(107, 60, 22, 0.22);
+    color: #1e120a;
   }
 }
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #e2e8f0;
+  background-color: #d6c3a9;
   border-radius: 9999px;
   transition: background-color 0.15s ease-in-out;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #cbd5e1;
+  background-color: #b89b78;
 }

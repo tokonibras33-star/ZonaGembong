@@ -226,7 +226,7 @@ export default function EmployeeInputBahanBakuPage() {
   const db = useFirestore();
   const { toast } = useToast();
   const activeBranch = useActiveBranch();
-  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gdm;
+  const branchInfo = BRANCH_LIST[activeBranch] || BRANCH_LIST.gembong;
   const theme = getBranchTheme(activeBranch);
   
   const [activeTab, setActiveTab] = useState<ActiveTab>("pembelian");
@@ -243,17 +243,11 @@ export default function EmployeeInputBahanBakuPage() {
 
   // States for Inter-Container Transfer
   const availableOtherBranches = useMemo(() => {
-    const list: BranchId[] = ['gdm', 'kedungreja', 'tehwarga', 'gembong'];
-    return list.filter(b => b !== activeBranch);
-  }, [activeBranch]);
+    return [] as BranchId[];
+  }, []);
 
   const [chosenSourceBranch, setChosenSourceBranch] = useState<BranchId | null>(null);
-  const targetSourceBranch = useMemo(() => {
-    if (chosenSourceBranch && availableOtherBranches.includes(chosenSourceBranch)) {
-      return chosenSourceBranch;
-    }
-    return availableOtherBranches[0] || 'kedungreja';
-  }, [chosenSourceBranch, availableOtherBranches]);
+  const targetSourceBranch = 'gembong' as BranchId;
 
   const setTargetSourceBranch = (branch: BranchId) => {
     setChosenSourceBranch(branch);

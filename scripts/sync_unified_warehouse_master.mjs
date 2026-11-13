@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyARQJvG1Lt8-NgrcGctWSso9kaHOxBDyNc",
-  authDomain: "sistempakyani.firebaseapp.com",
-  projectId: "sistempakyani",
-  storageBucket: "sistempakyani.firebasestorage.app",
-  messagingSenderId: "786197161585",
-  appId: "1:786197161585:web:114536cc8aa9496be49dd0",
+  apiKey: "AIzaSyCpG9Jf1Nh7HB9X1QB7jc7iFKsiA7iTbOo",
+  authDomain: "zonagombong-ef360.firebaseapp.com",
+  projectId: "zonagombong-ef360",
+  storageBucket: "zonagombong-ef360.firebasestorage.app",
+  messagingSenderId: "933059253193",
+  appId: "1:933059253193:web:f0d19452af57e3f2fe4e18",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -61,7 +61,7 @@ async function sync() {
       const existingDoc = await getDoc(doc(db, "bahan-baku", tw.id));
       if (!existingDoc.exists()) {
         console.log(`[MENAMBAHKAN KE GUDANG GDM] TW "${tw.nama}" (${tw.code})`);
-        
+
         // Give it a safe code if code conflicts with an existing ZW item
         let finalCode = tw.code;
         const codeConflict = zwItems.find(z => (z.code || '').trim().toUpperCase() === (tw.code || '').trim().toUpperCase());

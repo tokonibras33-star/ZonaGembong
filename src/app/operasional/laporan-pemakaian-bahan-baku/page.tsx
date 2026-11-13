@@ -132,9 +132,7 @@ export default function LaporanPemakaianBahanBakuPage() {
   async function fetchReport(mode: "harian" | "bulanan") {
     setLoadingReport(true);
     try {
-      const branchesToQuery: BranchId[] = activeBranch === 'all'
-        ? ['gdm', 'kedungreja', 'tehwarga', 'gembong']
-        : [activeBranch];
+      const branchesToQuery: BranchId[] = ['gembong'];
 
       // Combined maps across queried branches
       const bahanMap: { [id: string]: { code: string; nama: string; satuanKecil: string; hargaSatuanKecil: number } } = {};
@@ -450,11 +448,7 @@ export default function LaporanPemakaianBahanBakuPage() {
           Pilih Toko:
         </span>
         {[
-          { id: 'gdm' as BranchId, label: 'Zona Waktu GDM', color: 'bg-emerald-500' },
-          { id: 'kedungreja' as BranchId, label: 'Zona Kedungreja', color: 'bg-cyan-500' },
-          { id: 'tehwarga' as BranchId, label: 'Teh Warga GDM', color: 'bg-amber-500' },
-          { id: 'gembong' as BranchId, label: 'Zona Gembong', color: 'bg-indigo-500' },
-          { id: 'all' as BranchId, label: 'Semua Toko', color: 'bg-slate-700' },
+          { id: 'gembong' as BranchId, label: 'Zona Waktu Gembong', color: 'bg-indigo-500' },
         ].map((b) => {
           const isActive = activeBranch === b.id;
           return (
